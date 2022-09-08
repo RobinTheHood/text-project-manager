@@ -1,10 +1,12 @@
 <?php
 
-namespace App\Project;
+declare(strict_types=1);
+
+namespace App\Project\Creators;
 
 use DateTime;
 
-class ProjectEvaluator
+class EvaluationCreator
 {
     public function createBillItems(array $tasks): string
     {

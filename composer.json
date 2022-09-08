@@ -1,0 +1,16 @@
+{
+    "name": "robin/project-time-parse",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Robin Wieschendorf",
+            "email": "mail@robinwieschendorf.de"
+        }
+    ],
+    "require": {}
+}

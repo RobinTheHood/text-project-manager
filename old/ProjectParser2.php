@@ -9,8 +9,10 @@ class ProjectParser2
     public const SUBTASK_STATUS_BILLABLE = 1;
     public const SUBTASK_STATUS_UNBILLABLE = 2;
 
+    private $lineNumber = 0;
+
     /**
-     * @return Tasks
+     * @return Task[]
      */
     public function parseTasks(): array
     {
@@ -23,11 +25,11 @@ class ProjectParser2
          * @var Task
          */
         $currentTask = null;
-        $lineNumber = 0;
-        foreach ($lines as $line) {
-            $lineNumber++;
 
-            $task = $this->tryParseTask($line, $lineNumber);
+        foreach ($lines as $line) {
+            $this->lineNumber++;
+
+            $task = $this->tryParseTask($line);
             if ($task) {
                 if ($currentTask) {
                     $tasks[] = $currentTask;
@@ -37,7 +39,7 @@ class ProjectParser2
                 continue;
             }
 
-            $report = $this->tryParseReport($line, $lineNumber);
+            $report = $this->tryParseReport($line);
             if ($report && $currentTask) {
                 $currentTask->reports[] = $report;
             }
@@ -50,23 +52,23 @@ class ProjectParser2
         return $tasks;
     }
 
-    private function tryParseTask(string $line, int $linenumber): ?Task
+    private function tryParseTask(string $string): ?Task
     {
-        $line = trim($line);
+        $string = trim($string);
 
-        if (!$this->isValidTaskLineStart($line, $linenumber)) {
+        if (!$this->isValidTaskLineStart($string)) {
             return null;
         }
 
-        $line = $this->skipLetters($line, 2);
-        $lineParts = $this->getTrimmedLineParts($line);
+        $string = $this->skipLetters($string, 2);
+        $stringParts = $this->getTrimmedLineParts($string);
 
-        $name = $lineParts[0] ?? '';
+        $name = $stringParts[0] ?? '';
         if (!$name) {
-            throw new Exception('Missing task name in line:' . $linenumber);
+            throw new Exception('Missing task name in line:' . $this->lineNumber);
         }
 
-        $target = $this->parseTarget($lineParts[1] ?? '', $linenumber);
+        $target = $this->parseTarget($lineParts[1] ?? '', $this->lineNumber);
 
         $task = new Task();
         $task->name = $name;
@@ -80,10 +82,10 @@ class ProjectParser2
      * Anfang für einen Task handelt. Ein Task fängt mit einem - an und darf danach
      * nicht direkt einen weiteren - haben.
      */
-    private function isValidTaskLineStart(string $line, int $lineNumber): bool
+    private function isValidTaskLineStart(string $string): bool
     {
-        $char0 = mb_substr($line, 0, 1, 'utf-8');
-        $char1 = mb_substr($line, 1, 1, 'utf-8');
+        $char0 = mb_substr($string, 0, 1, 'utf-8');
+        $char1 = mb_substr($string, 1, 1, 'utf-8');
 
         if ($char0 === '-' && $char1 !== '-') {
             return true;
@@ -92,15 +94,15 @@ class ProjectParser2
         return false;
     }
 
-    private function tryParseReport(string $line, int $linenumber): ?Report
+    private function tryParseReport(string $string): ?Report
     {
-        $line = trim($line);
+        $string = trim($string);
 
-        if (!$this->isValidReportLineStart($line, $linenumber)) {
+        if (!$this->isValidReportLineStart($string)) {
             return null;
         }
 
-        $typeString = mb_substr($line, 0, 2, 'utf-8');
+        $typeString = mb_substr($string, 0, 2, 'utf-8');
 
         $type = Report::TYPE_BILLABLE;
         if ($typeString == '++') {
@@ -109,15 +111,15 @@ class ProjectParser2
             $type = Report::TYPE_UNBILLABLE;
         }
 
-        $line = $this->skipLetters($line, 2);
-        $lineParts = $this->getTrimmedLineParts($line);
+        $string = $this->skipLetters($string, 2);
+        $stringParts = $this->getTrimmedLineParts($string);
 
-        $description = $lineParts[2] ?? '';
-        $date = $lineParts[0] ?? '';
-        $amount = $this->parseAmount($lineParts[1] ?? '', $linenumber);
+        $description = $stringParts[2] ?? '';
+        $date = $stringParts[0] ?? '';
+        $amount = $this->parseAmount($stringParts[1] ?? '');
 
-        $externalPrice = $this->parsePrice($lineParts[3] ?? '', $linenumber);
-        $internalPrice = $this->parsePrice($lineParts[4] ?? '', $linenumber);
+        $externalPrice = $this->parsePrice($stringParts[3] ?? '');
+        $internalPrice = $this->parsePrice($stringParts[4] ?? '');
 
         $report = new Report();
         $report->description = $description;
@@ -135,11 +137,11 @@ class ProjectParser2
      * Anfang für einen Task handelt. Ein Task fängt mit einem - an und darf danach
      * nicht direkt einen weiteren - haben.
      */
-    private function isValidReportLineStart(string $line, int $lineNumber): bool
+    private function isValidReportLineStart(string $string): bool
     {
-        $char0 = mb_substr($line, 0, 1, 'utf-8');
-        $char1 = mb_substr($line, 1, 1, 'utf-8');
-        $char2 = mb_substr($line, 2, 1, 'utf-8');
+        $char0 = mb_substr($string, 0, 1, 'utf-8');
+        $char1 = mb_substr($string, 1, 1, 'utf-8');
+        $char2 = mb_substr($string, 2, 1, 'utf-8');
 
         if ($char0 === '-' && $char1 === '-' && $char2 !== '-') {
             return true;
@@ -159,11 +161,11 @@ class ProjectParser2
     /**
      * Trennt einen String anhand von ; auf und trimmt jeden Teil.
      */
-    private function getTrimmedLineParts(string $line): array
+    private function getTrimmedLineParts(string $string): array
     {
-        $lineParts = explode(';', $line);
-        $trimmedLineParts = array_map('trim', $lineParts);
-        return $trimmedLineParts;
+        $stringParts = explode(';', $string);
+        $trimmedStringParts = array_map('trim', $stringParts);
+        return $trimmedStringParts;
     }
 
     /**
@@ -175,13 +177,13 @@ class ProjectParser2
         return substr($string, $count, strlen($string) - $count);
     }
 
-    private function parsePrice(string $string, int $linenumber): float
+    private function parsePrice(string $string): float
     {
         $valueString = str_replace(',', '.', $string);
         return floatval($valueString);
     }
 
-    private function parseTarget(string $string, int $lineNumber): Target
+    private function parseTarget(string $string): Target
     {
         $target = new Target();
         $target->type == Target::TYPE_NONE;
@@ -190,14 +192,14 @@ class ProjectParser2
             return $target;
         }
 
-        $value = $this->parseTime($string, $lineNumber);
+        $value = $this->parseTime($string);
         $target->value = $value;
         $target->type = Target::TYPE_TIME;
 
         return $target;
     }
 
-    private function parseTime(string $string, int $lineNumber): int
+    private function parseTime(string $string): int
     {
         if (strpos($string, 'min') !== false) {
             $unit = 'min';
@@ -206,7 +208,7 @@ class ProjectParser2
             $unit = 'h';
             $valueStr = str_replace('h', '', $string);
         } else {
-            throw new Exception("Unkown unit in TargetTime field on line $lineNumber");
+            throw new Exception("Unkown unit in TargetTime field on line $this->lineNumber");
         }
 
         $value = floatval($valueStr);
@@ -218,7 +220,7 @@ class ProjectParser2
         return $value;
     }
 
-    private function parseAmount(string $string, int $lineNumber): Amount
+    private function parseAmount(string $string): Amount
     {
         $amount = new Amount();
 
@@ -239,7 +241,7 @@ class ProjectParser2
             $value = floatval($valueStr);
             $type = Amount::TYPE_FIX;
         } else {
-            throw new Exception("Unkown unit in Qunatity field on line $lineNumber");
+            throw new Exception("Unkown unit in Qunatity field on line $this->lineNumber");
         }
 
         $amount->type = $type;
