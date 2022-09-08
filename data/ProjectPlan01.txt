@@ -28,3 +28,7 @@
 ++ 12.09.2022; 28min; Mit Kunde telefoniert
 ++ 13.09.2022; 58min; Mit Kunde telefoniert
 ++ 14.09.2022; 58min; Für Kunde einstellungen gemacht; 80,11; 60,12
+
+- Aufgabe; 10h
+-- Unteraufgabe; 5h
+--- Unterunteraufgabe; 5h;
