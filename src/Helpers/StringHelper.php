@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Helpers;
+namespace RobinTheHood\TextProjectManager\Helpers;
 
 class StringHelper
 {

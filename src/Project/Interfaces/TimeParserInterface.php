@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Interfaces;
+namespace RobinTheHood\TextProjectManager\Project\Interfaces;
 
-use App\Project\Entities\Time;
+use RobinTheHood\TextProjectManager\Project\Entities\Time;
 
 interface TimeParserInterface
 {

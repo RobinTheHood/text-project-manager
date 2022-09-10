@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Project\Entities\Project;
+use RobinTheHood\TextProjectManager\Project\Entities\Project;
 
 class ProjectParser
 {

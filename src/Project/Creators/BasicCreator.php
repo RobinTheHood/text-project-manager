@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Creators;
+namespace RobinTheHood\TextProjectManager\Project\Creators;
+
+use DateTime;
+use RobinTheHood\TextProjectManager\Project\ProjectParser;
 
 class BasicCreator
 {
@@ -107,7 +110,7 @@ class BasicCreator
         return $this->stepRoundMinutes($minutes, $minutesStep) / 60;
     }
 
-    private function stepRoundMinutes(int $minutes, int $step): int
+    private function stepRoundMinutes(float $minutes, float $step): float
     {
         $roundedMinutes = round($minutes / $step) * $step;
         return $roundedMinutes;

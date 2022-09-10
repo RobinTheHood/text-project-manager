@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Tests;
+namespace RobinTheHood\TextProjectManager\Tests;
 
-use App\Project\Parsers\ProjectParser;
-use App\Project\Creators\EvaloationCreator;
+use RobinTheHood\TextProjectManager\Project\Parsers\ProjectParser;
+use RobinTheHood\TextProjectManager\Project\Creators\EvaloationCreator;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

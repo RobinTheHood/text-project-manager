@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Project\Parsers\AmountParser;
-use App\Project\Parsers\MoneyParser;
-use App\Project\Parsers\ReportParser;
-use App\Project\Parsers\TimeParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\AmountParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\MoneyParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\ReportParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\TimeParser;
 use PHPUnit\Framework\TestCase;
 
 final class ReportParserTest extends TestCase

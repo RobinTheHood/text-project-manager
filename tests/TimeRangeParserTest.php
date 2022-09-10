@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Project\Entities\Time;
-use App\Project\Entities\TimeRange;
-use App\Project\Parsers\TimeParser;
-use App\Project\Parsers\TimeRangeParser;
+use RobinTheHood\TextProjectManager\Project\Entities\Time;
+use RobinTheHood\TextProjectManager\Project\Entities\TimeRange;
+use RobinTheHood\TextProjectManager\Project\Parsers\TimeParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\TimeRangeParser;
 use Exception;
 use PHPUnit\Framework\TestCase;
 

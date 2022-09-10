@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Helpers\StringHelper;
-use App\Project\Entities\Task;
-use App\Project\Interfaces\TargetParserInterface;
+use RobinTheHood\TextProjectManager\Helpers\StringHelper;
+use RobinTheHood\TextProjectManager\Project\Entities\Task;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TargetParserInterface;
 use Exception;
 
 class TaskParser

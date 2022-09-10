@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Interfaces;
+namespace RobinTheHood\TextProjectManager\Project\Interfaces;
 
-use App\Project\Entities\TimeRange;
+use RobinTheHood\TextProjectManager\Project\Entities\TimeRange;
 
 interface TimeRangeParserInterface
 {

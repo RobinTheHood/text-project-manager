@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Scripts;
+namespace RobinTheHood\TextProjectManager\Scripts;
 
-use App\Project\ProjectParser;
-use App\Project\ProjectEvaluator;
+use RobinTheHood\TextProjectManager\Project\ProjectParser;
+use RobinTheHood\TextProjectManager\Project\ProjectEvaluator;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 

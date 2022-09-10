@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Helpers\StringHelper;
-use App\Project\Entities\Money;
-use App\Project\Entities\Report;
-use App\Project\Interfaces\AmountParserInterface;
-use App\Project\Interfaces\MoneyParserInterface;
-use App\Project\Entities\Amount;
+use RobinTheHood\TextProjectManager\Helpers\StringHelper;
+use RobinTheHood\TextProjectManager\Project\Entities\Money;
+use RobinTheHood\TextProjectManager\Project\Entities\Report;
+use RobinTheHood\TextProjectManager\Project\Interfaces\AmountParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\MoneyParserInterface;
+use RobinTheHood\TextProjectManager\Project\Entities\Amount;
 
 class ReportParser
 {

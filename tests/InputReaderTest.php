@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Adapters\FileGetContentsWrapper;
-use App\Helpers\InputReader;
+use RobinTheHood\TextProjectManager\Adapters\FileGetContentsWrapper;
+use RobinTheHood\TextProjectManager\Helpers\InputReader;
 use Exception;
 use PHPUnit\Framework\TestCase;
 

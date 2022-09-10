@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Interfaces;
+namespace RobinTheHood\TextProjectManager\Project\Interfaces;
 
-use App\Project\Entities\Target;
+use RobinTheHood\TextProjectManager\Project\Entities\Target;
 
 interface TargetParserInterface
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Project;
+namespace RobinTheHood\TextProjectManager\Project;
 
 use Exception;
 

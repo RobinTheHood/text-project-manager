@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Adapters;
+namespace RobinTheHood\TextProjectManager\Adapters;
 
 class FileGetContentsWrapper implements FileGetContentsWrapperInterface
 {

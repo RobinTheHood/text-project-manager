@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Project\Entities\Money;
-use App\Project\Entities\MoneyRange;
-use App\Project\Entities\Target;
-use App\Project\Entities\Time;
-use App\Project\Entities\TimeRange;
-use App\Project\Parsers\MoneyParser;
-use App\Project\Parsers\MoneyRangeParser;
-use App\Project\Parsers\TargetParser;
-use App\Project\Parsers\TimeParser;
-use App\Project\Parsers\TimeRangeParser;
+use RobinTheHood\TextProjectManager\Project\Entities\Money;
+use RobinTheHood\TextProjectManager\Project\Entities\MoneyRange;
+use RobinTheHood\TextProjectManager\Project\Entities\Target;
+use RobinTheHood\TextProjectManager\Project\Entities\Time;
+use RobinTheHood\TextProjectManager\Project\Entities\TimeRange;
+use RobinTheHood\TextProjectManager\Project\Parsers\MoneyParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\MoneyRangeParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\TargetParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\TimeParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\TimeRangeParser;
 use PHPUnit\Framework\TestCase;
 
 final class TargetParserTest extends TestCase

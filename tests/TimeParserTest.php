@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Project\Entities\Time;
-use App\Project\Parsers\TimeParser;
+use RobinTheHood\TextProjectManager\Project\Entities\Time;
+use RobinTheHood\TextProjectManager\Project\Parsers\TimeParser;
 use Exception;
 use PHPUnit\Framework\TestCase;
 

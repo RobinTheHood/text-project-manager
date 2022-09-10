@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Project\Entities\Money;
-use App\Project\Parsers\MoneyParser;
+use RobinTheHood\TextProjectManager\Project\Entities\Money;
+use RobinTheHood\TextProjectManager\Project\Parsers\MoneyParser;
 use Exception;
 use PHPUnit\Framework\TestCase;
 

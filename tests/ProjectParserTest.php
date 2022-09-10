@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Test;
 
-use App\Project\Parsers\ProjectParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\ProjectParser;
 use PHPUnit\Framework\TestCase;
 
 final class ProjectParserTest extends TestCase

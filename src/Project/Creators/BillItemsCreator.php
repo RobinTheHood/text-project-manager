@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Creators;
+namespace RobinTheHood\TextProjectManager\Project\Creators;
 
 class BillItemsCreator
 {

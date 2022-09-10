@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Project\Entities\Time;
-use App\Project\Interfaces\TimeParserInterface;
+use RobinTheHood\TextProjectManager\Project\Entities\Time;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TimeParserInterface;
 use Exception;
 
 class TimeParser implements TimeParserInterface

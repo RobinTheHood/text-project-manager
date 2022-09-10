@@ -1,9 +1,9 @@
 {
-    "name": "robin/project-time-parse",
+    "name": "robinthehood/text-project-manager",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "App\\": "src/"
+            "RobinTheHood\\TextProjectManager\\": "src/"
         }
     },
     "authors": [

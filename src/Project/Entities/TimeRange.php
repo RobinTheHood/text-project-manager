@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Entities;
+namespace RobinTheHood\TextProjectManager\Project\Entities;
 
 class TimeRange
 {

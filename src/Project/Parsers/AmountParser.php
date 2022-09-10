@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Project\Entities\Amount;
-use App\Project\Entities\Time;
-use App\Project\Interfaces\AmountParserInterface;
-use App\Project\Interfaces\TimeParserInterface;
+use RobinTheHood\TextProjectManager\Project\Entities\Amount;
+use RobinTheHood\TextProjectManager\Project\Entities\Time;
+use RobinTheHood\TextProjectManager\Project\Interfaces\AmountParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TimeParserInterface;
 use Exception;
 
 class AmountParser implements AmountParserInterface

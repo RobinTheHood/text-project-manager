@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Interfaces;
+namespace RobinTheHood\TextProjectManager\Project\Interfaces;
 
 interface PriceParserInterface
 {

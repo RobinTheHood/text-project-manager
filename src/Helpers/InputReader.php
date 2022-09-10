@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Helpers;
+namespace RobinTheHood\TextProjectManager\Helpers;
 
-use App\Adapters\FileGetContentsWrapperInterface;
+use RobinTheHood\TextProjectManager\Adapters\FileGetContentsWrapperInterface;
 use Exception;
 
 class InputReader

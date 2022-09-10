@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Helpers\StringHelper;
-use App\Project\Entities\TimeRange;
-use App\Project\Interfaces\TimeParserInterface;
-use App\Project\Interfaces\TimeRangeParserInterface;
+use RobinTheHood\TextProjectManager\Helpers\StringHelper;
+use RobinTheHood\TextProjectManager\Project\Entities\TimeRange;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TimeParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TimeRangeParserInterface;
 use Exception;
 
 class TimeRangeParser implements TimeRangeParserInterface

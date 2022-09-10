@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace App\Project\Parsers;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use App\Project\Entities\Target;
-use App\Project\Interfaces\TargetParserInterface;
-use App\Project\Interfaces\TimeParserInterface;
-use App\Project\Interfaces\TimeRangeParserInterface;
-use App\Project\Interfaces\MoneyParserInterface;
-use App\Project\Interfaces\MoneyRangeParserInterface;
+use RobinTheHood\TextProjectManager\Project\Entities\Target;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TargetParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TimeParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\TimeRangeParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\MoneyParserInterface;
+use RobinTheHood\TextProjectManager\Project\Interfaces\MoneyRangeParserInterface;
 use Exception;
 
 class TargetParser implements TargetParserInterface

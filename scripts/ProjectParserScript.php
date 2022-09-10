@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Tests;
+namespace RobinTheHood\TextProjectManager\Tests;
 
-use App\Project\ProjectParser2;
+use RobinTheHood\TextProjectManager\Project\ProjectParser2;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
