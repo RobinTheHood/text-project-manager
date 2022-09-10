@@ -12,5 +12,7 @@
             "email": "mail@robinwieschendorf.de"
         }
     ],
-    "require": {}
+    "require-dev": {
+        "phpunit/phpunit": "^9.5"
+    }
 }
