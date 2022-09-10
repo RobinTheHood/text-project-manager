@@ -5,57 +5,87 @@ declare(strict_types=1);
 namespace App\Project\Parsers;
 
 use App\Helpers\StringHelper;
+use App\Project\Entities\Money;
 use App\Project\Entities\Report;
 use App\Project\Interfaces\AmountParserInterface;
-use App\Project\Interfaces\PriceParserInterface;
+use App\Project\Interfaces\MoneyParserInterface;
+use App\Project\Entities\Amount;
 
 class ReportParser
 {
+    /**
+     * @var AmountParserInterface
+     */
     private $amountParser;
-    private $priceParser;
 
-    public function __construct(AmountParserInterface $amountParser, PriceParserInterface $priceParser)
+    /**
+     * @var MoneyParserInterface
+     */
+    private $moneyParser;
+
+    public function __construct(AmountParserInterface $amountParser, MoneyParserInterface $moneyParser)
     {
         $this->amountParser = $amountParser;
-        $this->priceParser = $priceParser;
+        $this->moneyParser = $moneyParser;
     }
 
     public function parse(string $string): ?Report
     {
-        $string = trim($string);
-
         if (!$this->isValidReportLineStart($string)) {
             return null;
-        }
-
-        $typeString = mb_substr($string, 0, 2, 'utf-8');
-
-        $type = Report::TYPE_BILLABLE;
-        if ($typeString == '++') {
-            $type = Report::TYPE_BILLABLE;
-        } elseif ($typeString == '--') {
-            $type = Report::TYPE_UNBILLABLE;
         }
 
         $string = StringHelper::skipLetters($string, 2);
         $stringParts = StringHelper::getTrimmedLineParts($string, ';');
 
-        $description = $stringParts[2] ?? '';
-        $date = $stringParts[0] ?? '';
-        $amount = $this->amountParser->parse($stringParts[1] ?? '');
-
-        $externalPrice = $this->priceParser->parse($stringParts[3] ?? '');
-        $internalPrice = $this->priceParser->parse($stringParts[4] ?? '');
-
         $report = new Report();
-        $report->description = $description;
-        $report->type = $type;
-        $report->date = $date;
-        $report->amount = $amount;
-        $report->externalPrice = $externalPrice;
-        $report->internalPrice = $internalPrice;
+        $report->type = $this->parseType($string);
+        $report->date = $this->parseDate($stringParts[0] ?? '');
+        $report->amount = $this->parseAmount($stringParts[1] ?? '');
+        $report->description = $this->parseDescription($stringParts[2] ?? '');
+        $report->externalPrice = $this->parsePrice($stringParts[3] ?? '');
+        $report->internalPrice = $this->parsePrice($stringParts[4] ?? '');
 
         return $report;
+    }
+
+    private function parseType($string): int
+    {
+        $string = trim($string);
+        $typeString = mb_substr($string, 0, 2, 'utf-8');
+
+        if ($typeString == '++') {
+            return Report::TYPE_BILLABLE;
+        }
+
+        return Report::TYPE_UNBILLABLE;
+    }
+
+    private function parseDate(string $string): string
+    {
+        $string = trim($string);
+        return $string;
+    }
+
+    private function parseAmount(string $string): Amount
+    {
+        $string = trim($string);
+        return $this->amountParser->parse($string);
+    }
+
+    private function parseDescription(string $string): string
+    {
+        $string = trim($string);
+        return $string;
+    }
+
+    private function parsePrice(string $string): ?Money
+    {
+        $string = trim($string);
+        if ($string) {
+            return $this->moneyParser->parse($string);
+        }
+        return null;
     }
 
     /**
@@ -65,6 +95,8 @@ class ReportParser
      */
     private function isValidReportLineStart(string $string): bool
     {
+        $string = trim($string);
+
         $char0 = mb_substr($string, 0, 1, 'utf-8');
         $char1 = mb_substr($string, 1, 1, 'utf-8');
         $char2 = mb_substr($string, 2, 1, 'utf-8');
