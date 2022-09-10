@@ -37,7 +37,7 @@ class TaskParser
             throw new Exception('Missing task name');
         }
 
-        $target = $this->targetParser->parse($lineParts[1] ?? '', $this->lineNumber);
+        $target = $this->targetParser->parse($stringParts[1] ?? '');
 
         $task = new Task();
         $task->name = $name;
