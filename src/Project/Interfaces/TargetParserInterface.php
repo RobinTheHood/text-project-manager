@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Project\Interfaces;
 
-use App\ProjectParser\Parser\Entities\Target;
+use App\Project\Entities\Target;
 
 interface TargetParserInterface
 {

@@ -19,17 +19,17 @@ class Target
     /**
      * SOLL Zeit-Spanne festgelegt
      */
-    public const TYPE_TIME_SPAN = 2;
+    public const TYPE_TIME_RANGE = 2;
 
     /**
      * SOLL Festpreis festgelegt
      */
-    public const TYPE_FIX = 3;
+    public const TYPE_MONEY = 3;
 
     /**
      * SOLL Festpreis-Spanne festgelegt
      */
-    public const TYPE_FIX_SPAN = 4;
+    public const TYPE_MONEY_RANGE = 4;
 
     public $value;
     public $type;

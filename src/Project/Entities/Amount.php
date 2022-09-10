@@ -7,7 +7,7 @@ namespace App\Project\Entities;
 class Amount
 {
     public const TYPE_TIME = 0;
-    public const TYPE_FIX = 1;
+    public const TYPE_QUANTITY = 1;
 
     /**
      * @var float;
