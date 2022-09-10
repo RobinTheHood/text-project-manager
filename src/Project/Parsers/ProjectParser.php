@@ -8,9 +8,6 @@ use App\Project\Entities\Project;
 
 class ProjectParser
 {
-    public const SUBTASK_STATUS_BILLABLE = 1;
-    public const SUBTASK_STATUS_UNBILLABLE = 2;
-
     private $lineNumber = 0;
 
     public function start(): Project
@@ -19,19 +16,23 @@ class ProjectParser
         return $this->parse($fileContent);
     }
 
-    public function parse($string): Project
+    public function parse(string $string): Project
     {
         $timeParser = new TimeParser();
-        $targetParser = new TargetParser($timeParser);
+        $timeRangeParser = new TimeRangeParser($timeParser);
+
+        $moneyParser = new MoneyParser();
+        $moneyRangeParser = new MoneyRangeParser($moneyParser);
+
+        $targetParser = new TargetParser($timeParser, $timeRangeParser, $moneyParser, $moneyRangeParser);
         $taskParser = new TaskParser($targetParser);
 
-        $amountParser = new AmountParser();
-        $priceParser = new PriceParser();
-        $reportParser = new ReportParser($amountParser, $priceParser);
+        $amountParser = new AmountParser($timeParser);
+        $reportParser = new ReportParser($amountParser, $moneyParser);
 
-        $fileContent = file_get_contents(__DIR__ . '/data/ProjectPlan01.txt');
-        $lines = explode("\n", $fileContent);
-
+        /**
+         * @var Task[]
+         */
         $tasks = [];
 
         /**
@@ -39,6 +40,7 @@ class ProjectParser
          */
         $currentTask = null;
 
+        $lines = explode("\n", $string);
         foreach ($lines as $line) {
             $this->lineNumber++;
 
