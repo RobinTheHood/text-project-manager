@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\Entities;
 
-class TimeRange
+class Number
 {
     /**
-     * @var Time
+     * @var float
      */
-    public $startTime;
+    public $value;
 
     /**
-     * @var Time
+     * @var string
      */
-    public $endTime;
+    public $unit = '';
 }
