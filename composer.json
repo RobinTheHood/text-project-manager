@@ -1,6 +1,7 @@
 {
     "name": "robinthehood/text-project-manager",
     "license": "MIT",
+    "type": "library",
     "autoload": {
         "psr-4": {
             "RobinTheHood\\TextProjectManager\\": "src/"
