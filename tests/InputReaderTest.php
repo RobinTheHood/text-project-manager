@@ -6,13 +6,11 @@ namespace Test;
 
 use RobinTheHood\TextProjectManager\Adapters\FileGetContentsWrapper;
 use RobinTheHood\TextProjectManager\Helpers\InputReader;
-use Exception;
 use PHPUnit\Framework\TestCase;
+use RobinTheHood\TextProjectManager\Helpers\EndOfFileException;
 
 final class InputReaderTest extends TestCase
 {
-    private $fileGetsContentWrapperMock;
-
     public function setUp(): void
     {
     }
@@ -29,6 +27,14 @@ final class InputReaderTest extends TestCase
         $string = $inputReader->seek(3);
         $expectedString = '123';
         $this->assertEquals($expectedString, $string);
+
+        $string = $inputReader->seek(9);
+        $expectedString = '123456789';
+        $this->assertEquals($expectedString, $string);
+
+        $string = $inputReader->seek(10);
+        $expectedString = '123456789';
+        $this->assertEquals($expectedString, $string);
     }
 
     public function testCanConsume(): void
@@ -43,43 +49,14 @@ final class InputReaderTest extends TestCase
         $string = $inputReader->consume(3);
         $expectedString = '456';
         $this->assertEquals($expectedString, $string);
-    }
 
-    public function testSeekThrowsExceptionOnEndOfFile1(): void
-    {
-        $this->expectException(Exception::class);
+        $string = $inputReader->consume(3);
+        $expectedString = '789';
+        $this->assertEquals($expectedString, $string);
 
-        $content = '';
-        $inputReader = $this->createInputReader($content);
-        $inputReader->seek();
-    }
-
-    public function testSeekThrowsExceptionOnEndOfFile2(): void
-    {
-        $this->expectException(Exception::class);
-
-        $content = '0';
-        $inputReader = $this->createInputReader($content);
-        $inputReader->seek(2);
-    }
-
-    public function testConsumeThrowsExceptionOnEndOfFile1(): void
-    {
-        $this->expectException(Exception::class);
-
-        $content = '123';
-        $inputReader = $this->createInputReader($content);
-        $inputReader->consume(5);
-    }
-
-    public function testConsumeThrowsExceptionOnEndOfFile2(): void
-    {
-        $this->expectException(Exception::class);
-
-        $content = '123123';
-        $inputReader = $this->createInputReader($content);
-        $inputReader->consume(3);
-        $inputReader->consume(4);
+        $string = $inputReader->consume();
+        $expectedString = '';
+        $this->assertEquals($expectedString, $string);
     }
 
     private function createInputReader(string $content): InputReader
