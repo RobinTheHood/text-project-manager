@@ -2,16 +2,29 @@
 
 namespace RobinTheHood\TextProjectManager\Scripts;
 
-use RobinTheHood\TextProjectManager\Project\ProjectParser;
-use RobinTheHood\TextProjectManager\Project\ProjectEvaluator;
+use Exception;
+use RobinTheHood\TextProjectManager\Adapters\FileGetContentsWrapper;
+use RobinTheHood\TextProjectManager\Helpers\InputReader;
+use RobinTheHood\TextProjectManager\Project\Creators\BillItemsCreator;
+use RobinTheHood\TextProjectManager\Project\Lexer\Lexer;
+use RobinTheHood\TextProjectManager\Project\Parsers\ProjectParser;
+use RobinTheHood\TextProjectManager\Project\Parsers\Parser;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$projectParser = new ProjectParser();
-$tasks = $projectParser->parseTasks();
-//var_dump($tasks);
+$fileGetsContentWrapper = new FileGetContentsWrapper();
+$inputReader = new InputReader($fileGetsContentWrapper, __DIR__ . '/../data/ParserTest.md');
+$lexer = new Lexer($inputReader);
+$parser = new Parser($lexer);
 
-$projectEvaluator = new ProjectEvaluator();
-$string = $projectEvaluator->createBillItems($tasks);
-//$string = $projectEvaluator->createEvaluation($tasks);
-echo $string;
+try {
+    $projectParser = new ProjectParser();
+    $project = $projectParser->parse($parser);
+    //var_dump($project);
+
+    $billItemNewCreator = new BillItemsCreator();
+    $string = $billItemNewCreator->create($project);
+    echo $string;
+} catch (Exception $e) {
+    echo $e;
+}

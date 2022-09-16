@@ -12,7 +12,7 @@ use RobinTheHood\TextProjectManager\Project\Entities\Quantity;
 use RobinTheHood\TextProjectManager\Project\Entities\Report;
 use RobinTheHood\TextProjectManager\Project\Entities\Task;
 
-class BillItemsNewCreator
+class BillItemsCreator
 {
     private const PRICE_BASE_EXTERNAL = 80.00;
     private const PRICE_BASE_INTERNAL = 60.00;
