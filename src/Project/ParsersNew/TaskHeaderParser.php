@@ -4,78 +4,94 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\ParsersNew;
 
-use Exception;
+use RobinTheHood\TextProjectManager\Project\Entities\DurationRange;
+use RobinTheHood\TextProjectManager\Project\Entities\MoneyRange;
 use RobinTheHood\TextProjectManager\Project\Entities\Target;
-use RobinTheHood\TextProjectManager\Project\Entities\Task;
 use RobinTheHood\TextProjectManager\Project\Lexer\Token;
 
 class TaskHeaderParser
 {
     /**
-     * <task_header> ::= <task_header_1> | <task_header_2>
+     * <task_header> ::= <token_string> <option_target> <token_new_line>
      */
     public function parse(Parser $parser): array
     {
-        $result = $this->parseHeader1($parser);
+        $taskHeader = [
+            'name' => '',
+            'target' => null
+        ];
 
-        if (!$result) {
-            $result = $this->parseHeader2($parser);
+        if (!$token = $parser->accept(Token::TYPE_STRING)) {
+            $parser->throwException('Missing task title');
+        }
+        $taskHeader['name'] = trim($token->string);
+        $taskHeader['target'] = $this->parseOptionTarget($parser);
+
+        if (!$parser->acceptNewlineOrEndOfFile()) {
+            $parser->throwException('Missing new line after task header');
         }
 
-        return $result;
+        (new NewLinesParser())->parse($parser);
+
+        return $taskHeader;
     }
 
     /**
-     * <task_header_1> ::= <token_string> <token_sparator> <target> <token_new_line>
-     * <target> ::= <duration_range> | <money_range> | <duration> | <money>
-     * <duration_range> :: <duration> - <duration>
-     * <money_range> ::= <money> - <money>
+     * <option_target> ::= <token_sparator> (<duration> | <duration_range> | <money> | <money_range>) | null
      */
-    private function parseHeader1(Parser $parser): array
+    private function parseOptionTarget(Parser $parser): ?Target
     {
-        $taskHeader = [];
-
-        if (!$token = $parser->accept(Token::TYPE_STRING)) {
-            return [];
-        }
-        $taskHeader['name'] = $token->string;
-
-        if (!$token = $parser->accept(Token::TYPE_SEPARATOR)) {
-            return [];
-        }
-
-        if (!$duration = (new DurationParser())->parse($parser)) {
-            return [];
-        }
         $target = new Target();
-        $target->value = $duration;
-        $target->type = Target::TYPE_TIME;
 
-        if (!$token = $parser->accept(Token::TYPE_NEW_LINE)) {
-            return [];
+        if (!$parser->accept(Token::TYPE_SEPARATOR)) {
+            return null;
         }
 
-        $taskHeader['target'] = $target;
-
-        return $taskHeader;
-    }
-
-    /**
-     * <task_header_2> ::= <token_string> <token_new_line>
-     */
-    private function parseHeader2(Parser $parser): array
-    {
-        $taskHeader = [];
-
-        if (!$token = $parser->accept(Token::TYPE_STRING)) {
-            return [];
-        }
-        $taskHeader['name'] = $token->string;
-
-        if (!$token = $parser->accept(Token::TYPE_NEW_LINE)) {
-            return [];
+        $number = (new NumberParser())->parse($parser);
+        if (!$number) {
+            $parser->throwException("Expect target (duration, durationRange, money or moneyRange) after first ; in task header.");
         }
 
-        return $taskHeader;
+        $durationStart = $number->convertToDuration();
+        if ($durationStart) {
+            if (!$parser->accept(Token::TYPE_SEPARATOR, '-')) {
+                $target->value = $durationStart;
+                return $target;
+            }
+
+            $number = (new NumberParser())->parse($parser);
+            if (!$number || !$durationEnd = $number->convertToDuration()) {
+                $parser->throwException('Expecting duration after - in task header');
+            }
+
+            $durationRange = new DurationRange();
+            $durationRange->startDuration = $durationStart;
+            $durationRange->endDuration = $durationEnd;
+
+            $target->value = $durationRange;
+            return $target;
+        }
+
+        $moneyStart = $number->convertToMoney();
+        if ($moneyStart) {
+            if (!$parser->accept(Token::TYPE_SEPARATOR, '-')) {
+                $target->value = $moneyStart;
+                return $target;
+            }
+
+            $number = (new NumberParser())->parse($parser);
+            if (!$number || !$moneyEnd = $number->convertToMoney()) {
+                $parser->throwException('Expecting Money after - in task header');
+            }
+
+            $moneyRange = new MoneyRange();
+            $moneyRange->startMoney = $moneyStart;
+            $moneyRange->endMoney = $moneyEnd;
+
+            $target->value = $moneyRange;
+            return $target;
+        }
+
+        $parser->throwException("Expect target (duration, durationRange, money or moneyRange) after first ; in task header.");
     }
 }

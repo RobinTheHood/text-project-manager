@@ -4,104 +4,136 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\ParsersNew;
 
-use Exception;
-use RobinTheHood\TextProjectManager\Project\Entities\Target;
+use RobinTheHood\TextProjectManager\Project\Entities\Description;
 use RobinTheHood\TextProjectManager\Project\Entities\Task;
 use RobinTheHood\TextProjectManager\Project\Lexer\Token;
 
 class TaskParser
 {
     /**
-     * @var Task
+     * @var int
      */
-    private $task;
+    private $level = 0;
+
+    public function setLevel(int $level): void
+    {
+        $this->level = $level;
+    }
 
     /**
-     * <task> ::= <token_1> | <token_task_2>
+     * <task> ::= <token_task_start> <task_header> <task_body> <new_lines>
      */
     public function parse(Parser $parser): ?Task
     {
-        $this->task = new Task();
-        $result = $this->parseTask1($parser);
-
-        if (!$result) {
-            $result = $this->parseTask2($parser);
-        }
-
-        if (!$result) {
+        $task = new Task();
+        if (!$this->parseTaskStart($parser)) {
             return null;
         }
 
-        return $this->task;
-    }
+        $taskHeader = (new TaskHeaderParser())->parse($parser);
 
-    /**
-     * <task_1> ::= <token_task_start> <task_header> <task_body> <new_lines>
-     */
-    private function parseTask1(Parser $parser): bool
-    {
-        if (!$token = $parser->accept(Token::TYPE_TASK_START)) {
-            return false;
-        }
+        $task->name = $taskHeader['name'];
+        $task->target = $taskHeader['target'];
 
-        if (!$taskHeader = (new TaskHeaderParser())->parse($parser)) {
-            return false;
-        }
-        $this->task->name = $taskHeader['name'];
-        $this->task->target = $taskHeader['target'];
+        $body = $this->parseBody($parser);
 
-        if (!$reports = $this->parseBody($parser)) {
-            return false;
-        }
+        $task->description = $body['description'];
+        $task->users = $body['users'];
+        $task->childTasks = $body['childTasks'];
+
 
         (new NewLinesParser())->parse($parser);
 
-        $this->task->reports = $reports;
-
-        return true;
+        return $task;
     }
 
-    /**
-     * <task_2> ::= <token_task_start> <task_header> <new_lines>
-     */
-    private function parseTask2(Parser $parser): bool
+    private function parseTaskStart(Parser $parser): ?Token
     {
-        if (!$token = $parser->accept(Token::TYPE_TASK_START)) {
-            return false;
+        $levelString = '#';
+        if ($this->level === 1) {
+            $levelString = '##';
+        } elseif ($this->level === 2) {
+            $levelString = '###';
         }
 
-        if (!$taskHeader = (new TaskHeaderParser())->parse($parser)) {
-            return false;
-        }
-
-        (new NewLinesParser())->parse($parser);
-
-        $this->task->name = $taskHeader['name'];
-        $this->task->target = $taskHeader['target'];
-
-        return true;
+        return $parser->accept(Token::TYPE_TASK_START, $levelString);
     }
 
-
     /**
-     * <task_body> ::= <report_list>
+     * <task_body> ::= <description> <user_list> <subtask_list> | <user_list> <subtask_list>
      */
     private function parseBody(Parser $parser): array
     {
-        $reports = $this->parseReportList($parser);
-        return $reports;
+        $body = [
+            'description' => null,
+            'users' => [],
+            'childTasks' => []
+        ];
+
+        $body['description'] = $this->parseTaskDescription($parser);
+
+        $users = $this->parseUserList($parser);
+        if ($users) {
+            $body['users'] = $users;
+        }
+
+        $subTasks = $this->parseChildTaskList($parser);
+        if ($subTasks) {
+            $body['childTasks'] = $subTasks;
+        }
+
+        return $body;
+    }
+
+    private function parseTaskDescription(Parser $parser): ?Description
+    {
+        if (!$token = $parser->accept(Token::TYPE_STRING)) {
+            return null;
+        }
+
+        if (!$parser->acceptNewlineOrEndOfFile()) {
+            $parser->throwException('Missing new line after user header');
+        }
+
+        (new NewLinesParser())->parse($parser);
+
+        $description = new Description();
+        if (strpos($token->string, '!') === 0) {
+            $description->type = Description::TYPE_VISABLE;
+            $description->value = trim(substr($token->string, 1, strlen($token->string) - 1));
+        } else {
+            $description->type = Description::TYPE_HIDDEN;
+            $description->value = $token->string;
+        }
+
+        return $description;
     }
 
     /**
-     * <report_list> ::= (<report>)*
+     * <subtask_list> ::= (<sub_task>)*
      */
-    private function parseReportList(Parser $parser): array
+    private function parseChildTaskList(Parser $parser): array
     {
-        $reports = [];
-        $reportParser = new ReportParser();
-        while ($report = $reportParser->parse($parser)) {
-            $reports[] = $report;
+        $childTasks = [];
+        $taskParser = new TaskParser();
+        $taskParser->setLevel($this->level + 1);
+
+        while (!$parser->isEndOfFile() && $childTask = $taskParser->parse($parser)) {
+            $childTasks[] = $childTask;
         }
-        return $reports;
+        return $childTasks;
+    }
+
+    /**
+     * <user_list> ::= (<user>)*
+     */
+    private function parseUserList(Parser $parser): array
+    {
+        $users = [];
+        $usersParser = new UserParser();
+        while (!$parser->isEndOfFile() && $user = $usersParser->parse($parser)) {
+            $users[] = $user;
+        }
+        return $users;
     }
 }

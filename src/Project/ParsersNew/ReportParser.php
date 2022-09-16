@@ -20,40 +20,62 @@ class ReportParser
             return null;
         }
 
+        $report->type = Report::TYPE_BILLABLE;
+        if ($token->string === '-') {
+            $report->type = Report::TYPE_UNBILLABLE;
+        }
+
         if (!$token = $parser->accept(Token::TYPE_DATE)) {
-            return null;
+            $parser->throwException('Expect date after report start');
         }
         $report->date = $token->string;
 
         if (!$token = $parser->accept(Token::TYPE_SEPARATOR)) {
-            return null;
+            $parser->throwException('Expect separator after report date');
         }
 
-        if (!$duration = (new DurationParser())->parse($parser)) {
-            return null;
+        if (!$number = (new NumberParser())->parse($parser)) {
+            $parser->throwException('Expect amount (duration or quantity) after report date');
         }
-        $report->amount = $duration;
+
+        $amount = $number->contertNumberToAmount();
+        if (!$amount) {
+            $parser->throwException('Expect amount (duration or quantity) after report date');
+        }
+        $report->amount = $amount;
 
         if (!$token = $parser->accept(Token::TYPE_SEPARATOR)) {
-            return null;
+            $parser->throwException('Expect separator after report duration');
         }
 
         if (!$token = $parser->accept(Token::TYPE_STRING)) {
-            return null;
+            $parser->throwException('Expect report title after report duration');
         }
         $report->description = trim($token->string);
 
-        if (!$token = $parser->accept(Token::TYPE_NEW_LINE)) {
-            return null;
+        if ($token = $parser->accept(Token::TYPE_SEPARATOR)) {
+            $number = (new NumberParser())->parse($parser);
+            if (!$number || !($money = $number->convertToMoney())) {
+                $parser->throwException('Expect report externalprice after report title');
+            }
+            $report->externalPrice = $money;
+        }
+
+        if ($token = $parser->accept(Token::TYPE_SEPARATOR)) {
+            $number = (new NumberParser())->parse($parser);
+            if (!$number || !($money = $number->convertToMoney())) {
+                $parser->throwException('Expect report internal price after report external price');
+            }
+            $report->internalPrice = $money;
+        }
+
+
+        if (!$parser->acceptNewlineOrEndOfFile()) {
+            $parser->throwException('Missing new line after task header');
         }
 
         (new NewLinesParser())->parse($parser);
 
         return $report;
-    }
-
-    private function parseNewLines(Parser $parser): void
-    {
-        while ($token = $parser->accept(Token::TYPE_NEW_LINE));
     }
 }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\ParsersNew;
 
+use Exception;
 use RobinTheHood\TextProjectManager\Project\Lexer\Lexer;
 use RobinTheHood\TextProjectManager\Project\Lexer\Token;
 
@@ -17,27 +18,43 @@ class Parser
     /**
      * @var Token
      */
-    private $currentToken;
+    private $lookaheadToken;
 
     public function __construct(Lexer $lexer)
     {
         $this->lexer = $lexer;
-        $this->currentToken = $this->nextToken();
+        $this->lookaheadToken = $this->nextToken();
     }
 
-    public function accept(int $tokenType): ?Token
+    public function accept(int $tokenType, $tokenString = ''): ?Token
     {
-        var_dump($this->currentToken);
+        echo 'Expect: ' . $this->lookaheadToken->typeToString($tokenType) . ' : ' . $tokenString . "\n";
+        var_dump($this->lookaheadToken);
+        echo "\n";
 
-        // if ($this->currentToken->type === Token::TYPE_EOF) {
-        //     die('EOF');
-        // }
+        if ($this->lookaheadToken->type !== $tokenType) {
+            return null;
+        }
 
-        if ($this->currentToken->type === $tokenType) {
-            $token = $this->currentToken;
-            $this->currentToken = $this->nextToken();
+        if ($tokenString && $this->lookaheadToken->string !== $tokenString) {
+            return null;
+        }
+
+        $token = $this->lookaheadToken;
+        $this->lookaheadToken = $this->nextToken();
+        return $token;
+    }
+
+    public function acceptNewlineOrEndOfFile(): ?Token
+    {
+        if ($token = $this->accept(Token::TYPE_EOF)) {
             return $token;
         }
+
+        if ($token = $this->accept(Token::TYPE_NEW_LINE)) {
+            return $token;
+        }
+
         return null;
     }
 
@@ -48,5 +65,18 @@ class Parser
             $token = $this->lexer->getNextToken();
         }
         return $token;
+    }
+
+    public function isEndOfFile(): bool
+    {
+        if ($this->lookaheadToken->type === Token::TYPE_EOF) {
+            return true;
+        }
+        return false;
+    }
+
+    public function throwException(string $message): void
+    {
+        throw new Exception($message . " on line {$this->lookaheadToken->line} at positon {$this->lookaheadToken->linePosition}");
     }
 }

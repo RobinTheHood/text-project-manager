@@ -18,6 +18,11 @@ class ProjectParser
         if ($tasks = $this->parseTaskList($parser)) {
             $project->tasks = $tasks;
         }
+
+        if (!$parser->accept(Token::TYPE_EOF)) {
+            $parser->throwException('Unexpected token after task list');
+            //throw new Exception("Unexpected token after task list on line" . $parser->getLookaheadToken()->getLine(), );
+        }
         return $project;
     }
 
@@ -27,7 +32,9 @@ class ProjectParser
     private function parseTaskList(Parser $parser): array
     {
         $tasks = [];
-        while ($task = (new TaskParser())->parse($parser)) {
+        $taskParser = new TaskParser();
+        $taskParser->setLevel(0);
+        while (!$parser->isEndOfFile() && $task = $taskParser->parse($parser)) {
             $tasks[] = $task;
         }
         return $tasks;
