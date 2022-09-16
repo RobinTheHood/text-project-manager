@@ -31,8 +31,7 @@ class ContextTask implements ContextInterface
             return;
         }
 
-        $lexer->acceptNotRun("#@-+\n");
-        $lexer->emit(Token::TYPE_STRING);
+        $lexer->pushContext(new ContextTaskDescription());
     }
 
     public function __toString()
