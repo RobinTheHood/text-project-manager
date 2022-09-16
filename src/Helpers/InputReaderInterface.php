@@ -11,4 +11,8 @@ interface InputReaderInterface
     public function consume(int $count = 1): string;
 
     public function isEof(): bool;
+
+    public function getLine(): int;
+
+    public function getLinePosition(): int;
 }

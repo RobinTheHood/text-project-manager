@@ -28,6 +28,16 @@ class InputReader implements InputReaderInterface
      */
     private $contentLength = 0;
 
+    /**
+     * @var int
+     */
+    private $line = 1;
+
+    /**
+     * @var int
+     */
+    private $linePosition = 1;
+
     public function __construct(FileGetContentsWrapperInterface $fileGetsContentWrapper, string $filePath)
     {
         $this->filePath = $filePath;
@@ -43,6 +53,13 @@ class InputReader implements InputReaderInterface
     public function consume(int $count = 1): string
     {
         $string = $this->getSubContent($this->pointer, $count);
+        if (strpos($string, "\n") !== false) {
+            $this->line++;
+            $parts = explode("\n", $string);
+            $this->linePosition = strlen($parts[1] ?? '');
+        } else {
+            $this->linePosition += $count;
+        }
         $this->pointer += $count;
         return $string;
     }
@@ -53,6 +70,16 @@ class InputReader implements InputReaderInterface
             return true;
         }
         return false;
+    }
+
+    public function getLine(): int
+    {
+        return $this->line;
+    }
+
+    public function getLinePosition(): int
+    {
+        return $this->linePosition;
     }
 
     private function getSubContent(int $offset, int $length): string
