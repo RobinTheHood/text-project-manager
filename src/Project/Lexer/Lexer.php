@@ -87,7 +87,12 @@ class Lexer extends AbstractLexer
 
     public function emit(int $type): void
     {
-        $token = new Token($type, $this->consumedString);
+        $token = new Token(
+            $type,
+            $this->consumedString,
+            $this->inputReader->getLine(),
+            $this->inputReader->getLinePosition()
+        );
         $this->consumedString = '';
         $this->emittedTokens[] = $token;
     }
@@ -101,7 +106,12 @@ class Lexer extends AbstractLexer
 
         while (!$token) {
             if ($this->inputReader->isEof()) {
-                return new Token(Token::TYPE_EOF, '');
+                return new Token(
+                    Token::TYPE_EOF,
+                    '',
+                    $this->inputReader->getLine(),
+                    $this->inputReader->getLinePosition()
+                );
             }
 
             $context = $this->getContext();

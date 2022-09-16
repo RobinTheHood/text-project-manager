@@ -35,10 +35,22 @@ class Token
      */
     public $string;
 
-    public function __construct(int $type, string $string)
+    /**
+     * @var int
+     */
+    public $line;
+
+    /**
+     * @var int
+     */
+    public $linePosition;
+
+    public function __construct(int $type, string $string, int $line, int $linePosition)
     {
         $this->type = $type;
         $this->string = $string;
+        $this->line = $line;
+        $this->linePosition = $linePosition;
     }
 
     public function typeToString(int $type): string
