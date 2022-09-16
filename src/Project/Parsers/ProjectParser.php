@@ -5,68 +5,38 @@ declare(strict_types=1);
 namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
 use RobinTheHood\TextProjectManager\Project\Entities\Project;
+use RobinTheHood\TextProjectManager\Project\Lexer\Token;
 
 class ProjectParser
 {
-    private $lineNumber = 0;
-
-    public function start(): Project
+    /**
+     * <project> ::= <task_list>
+     */
+    public function parse(Parser $parser): ?Project
     {
-        $fileContent = file_get_contents(__DIR__ . '/data/ProjectPlan01.txt');
-        return $this->parse($fileContent);
+        $project = new Project();
+        if ($tasks = $this->parseTaskList($parser)) {
+            $project->tasks = $tasks;
+        }
+
+        if (!$parser->accept(Token::TYPE_EOF)) {
+            $parser->throwException('Unexpected token after task list');
+            //throw new Exception("Unexpected token after task list on line" . $parser->getLookaheadToken()->getLine(), );
+        }
+        return $project;
     }
 
-    public function parse(string $string): Project
+    /**
+     * <task_list> ::= (task)*
+     */
+    private function parseTaskList(Parser $parser): array
     {
-        $timeParser = new TimeParser();
-        $timeRangeParser = new TimeRangeParser($timeParser);
-
-        $moneyParser = new MoneyParser();
-        $moneyRangeParser = new MoneyRangeParser($moneyParser);
-
-        $targetParser = new TargetParser($timeParser, $timeRangeParser, $moneyParser, $moneyRangeParser);
-        $taskParser = new TaskParser($targetParser);
-
-        $amountParser = new AmountParser($timeParser);
-        $reportParser = new ReportParser($amountParser, $moneyParser);
-
-        /**
-         * @var Task[]
-         */
         $tasks = [];
-
-        /**
-         * @var Task
-         */
-        $currentTask = null;
-
-        $lines = explode("\n", $string);
-        foreach ($lines as $line) {
-            $this->lineNumber++;
-
-            $task = $taskParser->parse($line);
-            if ($task) {
-                if ($currentTask) {
-                    $tasks[] = $currentTask;
-                }
-
-                $currentTask = $task;
-                continue;
-            }
-
-            $report = $reportParser->parse($line);
-            if ($report && $currentTask) {
-                $currentTask->reports[] = $report;
-            }
+        $taskParser = new TaskParser();
+        $taskParser->setLevel(0);
+        while (!$parser->isEndOfFile() && $task = $taskParser->parse($parser)) {
+            $tasks[] = $task;
         }
-
-        if ($currentTask) {
-            $tasks[] = $currentTask;
-        }
-
-        $project = new Project();
-        $project->tasks = $tasks;
-
-        return $project;
+        return $tasks;
     }
 }

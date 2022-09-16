@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace RobinTheHood\TextProjectManager\Project\ParsersNew;
+namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
 use Exception;
 use RobinTheHood\TextProjectManager\Project\Lexer\Lexer;

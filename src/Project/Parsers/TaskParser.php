@@ -4,62 +4,136 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use RobinTheHood\TextProjectManager\Helpers\StringHelper;
+use RobinTheHood\TextProjectManager\Project\Entities\Description;
 use RobinTheHood\TextProjectManager\Project\Entities\Task;
-use RobinTheHood\TextProjectManager\Project\Interfaces\TargetParserInterface;
-use Exception;
+use RobinTheHood\TextProjectManager\Project\Lexer\Token;
 
 class TaskParser
 {
     /**
-     * @var TargetParserInterface
+     * @var int
      */
-    private $targetParser;
+    private $level = 0;
 
-    public function __construct(TargetParserInterface $targetParser)
+    public function setLevel(int $level): void
     {
-        $this->targetParser = $targetParser;
+        $this->level = $level;
     }
 
-    public function parse(string $string): ?Task
+    /**
+     * <task> ::= <token_task_start> <task_header> <task_body> <new_lines>
+     */
+    public function parse(Parser $parser): ?Task
     {
-        $string = trim($string);
-
-        if (!$this->isValidTaskLineStart($string)) {
+        $task = new Task();
+        if (!$this->parseTaskStart($parser)) {
             return null;
         }
 
-        $string = StringHelper::skipLetters($string, 2);
-        $stringParts = StringHelper::getTrimmedLineParts($string, ';');
+        $taskHeader = (new TaskHeaderParser())->parse($parser);
 
-        $name = $stringParts[0] ?? '';
-        if (!$name) {
-            throw new Exception('Missing task name');
-        }
+        $task->name = $taskHeader['name'];
+        $task->target = $taskHeader['target'];
 
-        $target = $this->targetParser->parse($stringParts[1] ?? '');
+        $body = $this->parseBody($parser);
 
-        $task = new Task();
-        $task->name = $name;
-        $task->target = $target;
+        $task->description = $body['description'];
+        $task->users = $body['users'];
+        $task->childTasks = $body['childTasks'];
+
+
+        (new NewLinesParser())->parse($parser);
 
         return $task;
     }
 
-    /**
-     * Kontrolliert ob es sich um eine um eine Zeile mit einem validen Zeichen
-     * Anfang für einen Task handelt. Ein Task fängt mit einem - an und darf danach
-     * nicht direkt einen weiteren - haben.
-     */
-    private function isValidTaskLineStart(string $string): bool
+    private function parseTaskStart(Parser $parser): ?Token
     {
-        $char0 = mb_substr($string, 0, 1, 'utf-8');
-        $char1 = mb_substr($string, 1, 1, 'utf-8');
-
-        if ($char0 === '-' && $char1 !== '-') {
-            return true;
+        $levelString = '#';
+        if ($this->level === 1) {
+            $levelString = '##';
+        } elseif ($this->level === 2) {
+            $levelString = '###';
         }
 
-        return false;
+        return $parser->accept(Token::TYPE_TASK_START, $levelString);
+    }
+
+    /**
+     * <task_body> ::= <description> <user_list> <subtask_list> | <user_list> <subtask_list>
+     */
+    private function parseBody(Parser $parser): array
+    {
+        $body = [
+            'description' => null,
+            'users' => [],
+            'childTasks' => []
+        ];
+
+        $body['description'] = $this->parseTaskDescription($parser);
+
+        $users = $this->parseUserList($parser);
+        if ($users) {
+            $body['users'] = $users;
+        }
+
+        $subTasks = $this->parseChildTaskList($parser);
+        if ($subTasks) {
+            $body['childTasks'] = $subTasks;
+        }
+
+        return $body;
+    }
+
+    private function parseTaskDescription(Parser $parser): ?Description
+    {
+        if (!$token = $parser->accept(Token::TYPE_STRING)) {
+            return null;
+        }
+
+        if (!$parser->acceptNewlineOrEndOfFile()) {
+            $parser->throwException('Missing new line after user header');
+        }
+
+        (new NewLinesParser())->parse($parser);
+
+        $description = new Description();
+        if (strpos($token->string, '!') === 0) {
+            $description->type = Description::TYPE_VISABLE;
+            $description->value = trim(substr($token->string, 1, strlen($token->string) - 1));
+        } else {
+            $description->type = Description::TYPE_HIDDEN;
+            $description->value = $token->string;
+        }
+
+        return $description;
+    }
+
+    /**
+     * <subtask_list> ::= (<sub_task>)*
+     */
+    private function parseChildTaskList(Parser $parser): array
+    {
+        $childTasks = [];
+        $taskParser = new TaskParser();
+        $taskParser->setLevel($this->level + 1);
+
+        while (!$parser->isEndOfFile() && $childTask = $taskParser->parse($parser)) {
+            $childTasks[] = $childTask;
+        }
+        return $childTasks;
+    }
+
+    /**
+     * <user_list> ::= (<user>)*
+     */
+    private function parseUserList(Parser $parser): array
+    {
+        $users = [];
+        $usersParser = new UserParser();
+        while (!$parser->isEndOfFile() && $user = $usersParser->parse($parser)) {
+            $users[] = $user;
+        }
+        return $users;
     }
 }

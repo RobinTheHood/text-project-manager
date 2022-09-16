@@ -4,115 +4,78 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\Parsers;
 
-use RobinTheHood\TextProjectManager\Helpers\StringHelper;
-use RobinTheHood\TextProjectManager\Project\Entities\Money;
 use RobinTheHood\TextProjectManager\Project\Entities\Report;
-use RobinTheHood\TextProjectManager\Project\Interfaces\AmountParserInterface;
-use RobinTheHood\TextProjectManager\Project\Interfaces\MoneyParserInterface;
-use RobinTheHood\TextProjectManager\Project\Entities\Amount;
+use RobinTheHood\TextProjectManager\Project\Lexer\Token;
 
 class ReportParser
 {
     /**
-     * @var AmountParserInterface
+     * <report> ::= <token_report_start> <token_date>; <amount>; <token_string> <token_new_line> <new_lines>
+     * <amount> ::= <duration>
      */
-    private $amountParser;
-
-    /**
-     * @var MoneyParserInterface
-     */
-    private $moneyParser;
-
-    public function __construct(AmountParserInterface $amountParser, MoneyParserInterface $moneyParser)
+    public function parse(Parser $parser): ?Report
     {
-        $this->amountParser = $amountParser;
-        $this->moneyParser = $moneyParser;
-    }
-
-    public function parse(string $string): ?Report
-    {
-        if (!$this->isValidReportLineStart($string)) {
+        $report = new Report();
+        if (!$token = $parser->accept(Token::TYPE_REPORT_START)) {
             return null;
         }
 
-        $string = StringHelper::skipLetters($string, 2);
-        $stringParts = StringHelper::getTrimmedLineParts($string, ';');
+        $report->type = Report::TYPE_BILLABLE;
+        if ($token->string === '-') {
+            $report->type = Report::TYPE_UNBILLABLE;
+        }
 
-        $report = new Report();
-        $report->type = $this->parseType($string);
-        $report->date = $this->parseDate($stringParts[0] ?? '');
-        $report->amount = $this->parseAmount($stringParts[1] ?? '');
-        $report->description = $this->parseDescription($stringParts[2] ?? '');
-        $report->externalPrice = $this->parsePrice($stringParts[3] ?? '');
-        $report->internalPrice = $this->parsePrice($stringParts[4] ?? '');
+        if (!$token = $parser->accept(Token::TYPE_DATE)) {
+            $parser->throwException('Expect date after report start');
+        }
+        $report->date = $token->string;
+
+        if (!$token = $parser->accept(Token::TYPE_SEPARATOR)) {
+            $parser->throwException('Expect separator after report date');
+        }
+
+        if (!$number = (new NumberParser())->parse($parser)) {
+            $parser->throwException('Expect amount (duration or quantity) after report date');
+        }
+
+        $amount = $number->contertNumberToAmount();
+        if (!$amount) {
+            $parser->throwException('Expect amount (duration or quantity) after report date');
+        }
+        $report->amount = $amount;
+
+        if (!$token = $parser->accept(Token::TYPE_SEPARATOR)) {
+            $parser->throwException('Expect separator after report duration');
+        }
+
+        if (!$token = $parser->accept(Token::TYPE_STRING)) {
+            $parser->throwException('Expect report title after report duration');
+        }
+        $report->description = trim($token->string);
+
+        if ($token = $parser->accept(Token::TYPE_SEPARATOR)) {
+            $number = (new NumberParser())->parse($parser);
+            if (!$number || !($money = $number->convertToMoney())) {
+                $parser->throwException('Expect report externalprice after report title');
+            }
+            $report->externalPrice = $money;
+        }
+
+        if ($token = $parser->accept(Token::TYPE_SEPARATOR)) {
+            $number = (new NumberParser())->parse($parser);
+            if (!$number || !($money = $number->convertToMoney())) {
+                $parser->throwException('Expect report internal price after report external price');
+            }
+            $report->internalPrice = $money;
+        }
+
+
+        if (!$parser->acceptNewlineOrEndOfFile()) {
+            $parser->throwException('Missing new line after task header');
+        }
+
+        (new NewLinesParser())->parse($parser);
 
         return $report;
-    }
-
-    private function parseType($string): int
-    {
-        $string = trim($string);
-        $typeString = mb_substr($string, 0, 2, 'utf-8');
-
-        if ($typeString == '++') {
-            return Report::TYPE_BILLABLE;
-        }
-
-        return Report::TYPE_UNBILLABLE;
-    }
-
-    private function parseDate(string $string): string
-    {
-        $string = trim($string);
-        return $string;
-    }
-
-    private function parseAmount(string $string): Amount
-    {
-        $string = trim($string);
-        return $this->amountParser->parse($string);
-    }
-
-    private function parseDescription(string $string): string
-    {
-        $string = trim($string);
-        return $string;
-    }
-
-    private function parsePrice(string $string): ?Money
-    {
-        $string = trim($string);
-        if ($string) {
-            return $this->moneyParser->parse($string);
-        }
-        return null;
-    }
-
-    /**
-     * Kontrolliert ob es sich um eine um eine Zeile mit einem validen Zeichen
-     * Anfang für einen Task handelt. Ein Task fängt mit einem - an und darf danach
-     * nicht direkt einen weiteren - haben.
-     */
-    private function isValidReportLineStart(string $string): bool
-    {
-        $string = trim($string);
-
-        $char0 = mb_substr($string, 0, 1, 'utf-8');
-        $char1 = mb_substr($string, 1, 1, 'utf-8');
-        $char2 = mb_substr($string, 2, 1, 'utf-8');
-
-        if ($char0 === '-' && $char1 === '-' && $char2 !== '-') {
-            return true;
-        }
-
-        if ($char0 === '+' && $char1 === '+' && $char2 !== '+') {
-            return true;
-        }
-
-        if ($char0 === '?' && $char1 === '?' && $char2 !== '?') {
-            return true;
-        }
-
-        return false;
     }
 }
