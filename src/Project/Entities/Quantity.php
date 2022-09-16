@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\Entities;
 
-class Amount
+class Quantity
 {
     /**
-     * @var Duration|Quantity;
+     * @var string
      */
     public $value;
 }

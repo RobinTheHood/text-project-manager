@@ -6,7 +6,15 @@ namespace RobinTheHood\TextProjectManager\Project\Entities;
 
 class Task
 {
+    /**
+     * @var string
+     */
     public $name;
+
+    /**
+     * @var Description
+     */
+    public $description;
 
     /**
      * @var Target
@@ -14,9 +22,12 @@ class Task
     public $target;
 
     /**
-     * @var Report[]
+     * @var User[]
      */
-    public $reports;
+    public $users;
 
-    public $parentTask;
+    /**
+     * @var Task[]
+     */
+    public $childTasks;
 }

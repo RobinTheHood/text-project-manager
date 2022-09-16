@@ -25,4 +25,14 @@ class Report
      * @var int
      */
     public $type;
+
+    /**
+     * @var Money
+     */
+    public $externalPrice;
+
+    /**
+     * @var Money
+     */
+    public $internalPrice;
 }
