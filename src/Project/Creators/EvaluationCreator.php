@@ -4,55 +4,144 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Project\Creators;
 
-use DateTime;
+use RobinTheHood\TextProjectManager\Project\Entities\Project;
+use RobinTheHood\TextProjectManager\Project\Entities\Task;
 
-class EvaluationCreator
+class EvaluationCreator extends AbstractCreator
 {
-    public function createBillItems(array $tasks): string
+    private const PRICE_BASE_EXTERNAL = 80.00;
+    private const PRICE_BASE_INTERNAL = 60.00;
+
+    public function create(Project $project): string
     {
-        $roundedTotalPrice = 0;
+        $string = '';
+        $string .= "####### AUSWERTUNG #######\n";
+        $string .= "### Basiswerte ###\n";
+        $string .= "60,00 € interner Stundensatz (Agentur-Kosten pro Stunde, Büro, Strom, Personal, ...)\n";
+        $string .= "80,00 € externer Stundensatz (Kunden-Kosten pro Stunde)\n";
+        $string .= "\n";
 
-        $string = "####### RECHNUNGSPOSITIONEN #######\n";
-        foreach ($tasks as $task) {
-            $billableSubTasks = $this->getBillableSubTasksFromTask($task);
-            if (!$billableSubTasks) {
-                continue;
-            }
+        foreach ($project->tasks as $task) {
+            $string .= $this->evalTask($task);
+        }
+        return $string;
+    }
 
-            $firstSubTask = $this->getFirstSubTaskFromSubTasksByDate($billableSubTasks);
-            $lastSubTask = $this->getLastSubTaskFromSubTasksByDate($billableSubTasks);
+    private function evalTask(Task $task): string
+    {
+        $string = $this->evalBaseTask($task);
 
-            $string .= "{$task['name']} ({$firstSubTask['date']} - {$lastSubTask['date']})\n";
-
-            $string .= $this->getFormatedSubTaskNamesFromSubTask($billableSubTasks);
-            $billabledHours = $this->getHoursFromSubTasks($billableSubTasks);
-            $roundedBillableHours = $this->stepRoundHours($billabledHours, 0.25);
-            $roundedBillablePrice = $roundedBillableHours * 80.0;
-            $formatedRoundedBillablePrice = number_format($roundedBillablePrice, 2, ',', '.');
-
-            if ($task['targetTime']['value'] ?? 0) {
-                $roundedTargetBillableHours = $this->stepRoundHours($task['targetTime']['value'], 0.25);
-                $roundedTargetBillablePrice = $roundedTargetBillableHours * 80.0;
-                $formatedRoundedTargetBillablePrice = number_format($roundedTargetBillablePrice, 2, ',', '.');
-                $string .= "$roundedTargetBillableHours Std. à 80,00€ = {$formatedRoundedTargetBillablePrice}€\n\n";
-            } else {
-                $string .= "$roundedBillableHours Std. à 80,00€ = {$formatedRoundedBillablePrice}€\n\n";
-            }
-            $roundedTotalPrice += $roundedBillablePrice;
+        foreach ($task->childTasks as $childTask) {
+            $string .= $this->evalTask($childTask);
         }
 
-        //$formatedRoundedTotalPrice = number_format($roundedTotalPrice, 2, ',', '.');
-        //$string .= "Gesamt\n{$formatedRoundedTotalPrice}€\n";
+        return $string;
+    }
+
+    private function evalBaseTask(Task $task): string
+    {
+        $reports = $this->getAllReportsFromTask($task);
+
+        if (!$reports) {
+            return '';
+        }
+
+        // Calcuation
+        $firstReport = $this->getFirstReportByDate($reports);
+        $lastReport = $this->getLastReportByDate($reports);
+        $actual = $this->calculateActual($reports);
+        $target = $this->calculateTarget($reports);
+        $contributionMargin = $target['total'] - $actual['total'];
+
+        // Print
+        $string = "Aufgabe: {$task->name} ({$firstReport->date} - {$lastReport->date})\n";
+
+        foreach ($actual['condensates'] as $condensate) {
+            $string .= "IST {$condensate['hours']} Std. á {$condensate['internalPrice']}  = {$condensate['totalInternalPrice']}\n";
+        }
+        $string .= "IST (Ausgaben) {$actual['total']}\n";
+
+        foreach ($target['condensates'] as $condensate) {
+            $string .= "SOLL {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
+        }
+        $string .= "SOLL (Einnahmen) {$target['total']}\n";
+
+        $string .= "Deckungsbeitrag: $contributionMargin\n";
+        $string .= "\n";
 
         return $string;
+    }
+
+    private function calculateActual(array $reports): array
+    {
+        $durationReports = $this->filterReportsByDuration($reports);
+
+        $groupedDurationReportsByInternalPrice = $this->groupReportsByInternalPrice(
+            $durationReports,
+            self::PRICE_BASE_INTERNAL
+        );
+
+        $condensates = [];
+        foreach ($groupedDurationReportsByInternalPrice as $reports) {
+            $condensates[] = $this->condenseDurationReports(
+                $reports,
+                self::PRICE_BASE_EXTERNAL,
+                self::PRICE_BASE_INTERNAL
+            );
+        }
+
+        $actualPrice = 0;
+        foreach ($condensates as $condensate) {
+            $actualPrice += $condensate['totalInternalPrice'];
+        }
+
+        return [
+            'total' => $actualPrice,
+            'condensates' => $condensates
+        ];
+    }
+
+    private function calculateTarget(array $reports): array
+    {
+        $billableReports = $this->filterReportsByBillable($reports);
+        $durationReports = $this->filterReportsByDuration($billableReports);
+
+        $groupedDurationReportsByExternalPrice = $this->groupReportsByExternalPrice(
+            $durationReports,
+            self::PRICE_BASE_EXTERNAL
+        );
+
+        $condensates = [];
+        foreach ($groupedDurationReportsByExternalPrice as $reports) {
+            $condensates[] = $this->condenseDurationReports(
+                $reports,
+                self::PRICE_BASE_EXTERNAL,
+                self::PRICE_BASE_INTERNAL
+            );
+        }
+
+        $targetPrice = 0;
+        foreach ($condensates as $condensate) {
+            //$string .= "SOLL {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
+            $targetPrice += $condensate['totalExternalPriceRounded'];
+        }
+
+        // $string .= "SOLL (Einnahmen) $targetPrice\n";
+
+        return [
+            'total' => $targetPrice,
+            'condensates' => $condensates
+        ];
     }
 
     /**
      * Deckungsbeitragsberechnung:
      * https://www.textbest.de/magazin/aus-dem-agenturalltag-diese-controlling-kennzahlen-sind-wichtig/
      * Bezahlte Stunden x Stundensatz im KVA – erbrachte Stunden x Kosten pro Stunde = Deckungsbeitrag
+     *
+     * SOLL Einnahmen - IST Ausgaben = Deckungsbeitrag
      */
-    public function createEvaluation(array $tasks): string
+    private function createEvaluation(array $tasks): string
     {
         $internalPrice = 60;
         $externalPrice = 80;
@@ -211,32 +300,5 @@ class EvaluationCreator
     private function getUnbillableSubTasksFromTask(array $task): array
     {
         return $this->filterUnbillableSubTasks($task['subTasks']);
-    }
-
-    private function compareDate(string $germanDate1, string $germanDate2): int
-    {
-        $dateTime1 = new DateTime($germanDate1);
-        $dateTime2 = new DateTime($germanDate2);
-
-        if ($dateTime1->getTimestamp() < $dateTime2->getTimestamp()) {
-            return -1;
-        } elseif ($dateTime1->getTimestamp() > $dateTime2->getTimestamp()) {
-            return 1;
-        }
-
-        return 0;
-    }
-
-    private function stepRoundHours(float $hours, float $step): float
-    {
-        $minutes = round($hours * 60);
-        $minutesStep = round($step * 60);
-        return $this->stepRoundMinutes($minutes, $minutesStep) / 60;
-    }
-
-    private function stepRoundMinutes(int $minutes, int $step): int
-    {
-        $roundedMinutes = round($minutes / $step) * $step;
-        return $roundedMinutes;
     }
 }
