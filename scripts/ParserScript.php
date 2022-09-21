@@ -15,6 +15,7 @@ $fileGetsContentWrapper = new FileGetContentsWrapper();
 $inputReader = new InputReader($fileGetsContentWrapper, __DIR__ . '/../data/ParserTest.md');
 $lexer = new Lexer($inputReader);
 $parser = new Parser($lexer);
+$parser->debug = true;
 
 try {
     $projectParser = new ProjectParser();
