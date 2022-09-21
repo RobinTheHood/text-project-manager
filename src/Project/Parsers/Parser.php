@@ -20,6 +20,11 @@ class Parser
      */
     private $lookaheadToken;
 
+    /**
+     * @var bool
+     */
+    public $debug = false;
+
     public function __construct(Lexer $lexer)
     {
         $this->lexer = $lexer;
@@ -28,9 +33,11 @@ class Parser
 
     public function accept(int $tokenType, $tokenString = ''): ?Token
     {
-        echo 'Expect: ' . $this->lookaheadToken->typeToString($tokenType) . ' : ' . $tokenString . "\n";
-        var_dump($this->lookaheadToken);
-        echo "\n";
+        if ($this->debug) {
+            echo 'Expect: ' . $this->lookaheadToken->typeToString($tokenType) . ' : ' . $tokenString . "\n";
+            var_dump($this->lookaheadToken);
+            echo "\n";
+        }
 
         if ($this->lookaheadToken->type !== $tokenType) {
             return null;
