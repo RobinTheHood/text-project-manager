@@ -49,9 +49,16 @@ class EvaluationCreator extends AbstractCreator
         // Calcuation
         $firstReport = $this->getFirstReportByDate($reports);
         $lastReport = $this->getLastReportByDate($reports);
-        $actual = $this->calculateActual($reports);
-        $target = $this->calculateTarget($reports);
-        $contributionMargin = $target['total'] - $actual['total'];
+        $actual = $this->calculateActualFromReports($reports);
+        $target = $this->calculateTargetFromReports($reports);
+
+        // Calculate Target
+        $targetPriceMin = $task->target->value->startDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
+        $targetPriceMax = $task->target->value->endDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
+        $targetPrice = min($targetPriceMax, max($targetPriceMin, $target['total']));
+        //$targetMin = $task->target->value
+
+        $contributionMargin = $targetPrice - $actual['total'];
 
         // Print
         $string = "Aufgabe: {$task->name} ({$firstReport->date} - {$lastReport->date})\n";
@@ -61,10 +68,14 @@ class EvaluationCreator extends AbstractCreator
         }
         $string .= "IST (Ausgaben) {$actual['total']}\n";
 
-        foreach ($target['condensates'] as $condensate) {
-            $string .= "SOLL {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
+        if ($task->target->value) {
+            $string .= "SOLL (Einnahmen): $targetPrice € ($targetPriceMin € bis $targetPriceMax €) \n";
+        } else {
+            foreach ($target['condensates'] as $condensate) {
+                $string .= "(fiktive SOLL-Zeit) {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
+            }
+            $string .= "(fiktive SOLL-Zeit) (Einnahmen) {$target['total']}\n";
         }
-        $string .= "SOLL (Einnahmen) {$target['total']}\n";
 
         $string .= "Deckungsbeitrag: $contributionMargin\n";
         $string .= "\n";
@@ -72,7 +83,17 @@ class EvaluationCreator extends AbstractCreator
         return $string;
     }
 
-    private function calculateActual(array $reports): array
+    /**
+     * Berechnet den IST-Wert der angegebenen Reports. Liefert ein Array im
+     * folgendem Format zurück:
+     * [
+     *     'total' => <float> - gesamt IST-WERT in Euro über alle Reports
+     *     'condensates' => <array> - ein Array mit allen Condensates
+     * ]
+     *
+     * @param Report[] $reports
+     */
+    private function calculateActualFromReports(array $reports): array
     {
         $durationReports = $this->filterReportsByDuration($reports);
 
@@ -101,7 +122,17 @@ class EvaluationCreator extends AbstractCreator
         ];
     }
 
-    private function calculateTarget(array $reports): array
+    /**
+     * Berechnet den SOLL-Wert der angegebenen Reports. Liefert ein Array im
+     * folgendem Format zurück:
+     * [
+     *     'total' => <float> - gesamt SOLL-WERT in Euro über alle Reports
+     *     'condensates' => <array> - ein Array mit allen Condensates
+     * ]
+     *
+     * @param Report[] $reports
+     */
+    private function calculateTargetFromReports(array $reports): array
     {
         $billableReports = $this->filterReportsByBillable($reports);
         $durationReports = $this->filterReportsByDuration($billableReports);
@@ -122,11 +153,8 @@ class EvaluationCreator extends AbstractCreator
 
         $targetPrice = 0;
         foreach ($condensates as $condensate) {
-            //$string .= "SOLL {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
             $targetPrice += $condensate['totalExternalPriceRounded'];
         }
-
-        // $string .= "SOLL (Einnahmen) $targetPrice\n";
 
         return [
             'total' => $targetPrice,
