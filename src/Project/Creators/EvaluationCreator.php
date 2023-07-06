@@ -86,7 +86,8 @@ class EvaluationCreator extends AbstractCreator
         if ($task->target) {
             $targetPriceMin = $task->target->value->startDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
             $targetPriceMax = $task->target->value->endDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
-            $targetPrice = min($targetPriceMax, max($targetPriceMin, $target['total']));
+            $targetPrice = $this->clamp($target['total'], $targetPriceMin, $targetPriceMax);
+            //$targetPrice = min($targetPriceMax, max($targetPriceMin, $target['total']));
         }
         $contributionMargin = $targetPrice - $actual['total'];
         //$targetMin = $task->target->value
