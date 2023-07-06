@@ -5,8 +5,17 @@ declare(strict_types=1);
 namespace RobinTheHood\TextProjectManager\Project\Creators;
 
 use RobinTheHood\TextProjectManager\Project\Entities\Project;
+use RobinTheHood\TextProjectManager\Project\Entities\Report;
 use RobinTheHood\TextProjectManager\Project\Entities\Task;
+use RobinTheHood\TextProjectManager\Project\Parsers\ProjectParser;
 
+/**
+ * Deckungsbeitragsberechnung:
+ * https://www.textbest.de/magazin/aus-dem-agenturalltag-diese-controlling-kennzahlen-sind-wichtig/
+ * Bezahlte Stunden x Stundensatz im KVA – erbrachte Stunden x Kosten pro Stunde = Deckungsbeitrag
+ *
+ * SOLL Einnahmen - IST Ausgaben = Deckungsbeitrag
+ */
 class EvaluationCreator extends AbstractCreator
 {
     private const PRICE_BASE_EXTERNAL = 80.00;
@@ -21,29 +30,47 @@ class EvaluationCreator extends AbstractCreator
         $string .= "80,00 € externer Stundensatz (Kunden-Kosten pro Stunde)\n";
         $string .= "\n";
 
+        $taskEvaluationDTOs = [];
         foreach ($project->tasks as $task) {
-            $string .= $this->evalTask($task);
+            $this->evalTask($taskEvaluationDTOs, $task);
         }
+
+        $totalContributionMargin = 0;
+
+        /** @var TaskEvaluationDTO $taskEvaluationDTO*/
+        foreach ($taskEvaluationDTOs as $taskEvaluationDTO) {
+            $string .= $this->renderTaskEvaluationDTO($taskEvaluationDTO);
+            $totalContributionMargin += $taskEvaluationDTO->getContributionMargin();
+        }
+
+        $string .= "### Gesamter Auftrag ### \n";
+        $string .= "{$this->formatCurrency($totalContributionMargin)} Deckungsbeitrag\n";
+
         return $string;
     }
 
-    private function evalTask(Task $task): string
+    /**
+     * @param TaskEvaluationDTO[] $taskEvaluationDTOs
+     * @param Task $task
+     */
+    private function evalTask(array &$taskEvaluationDTOs, Task $task)
     {
-        $string = $this->evalBaseTask($task);
+        $taskEvaluationDTO = $this->evalBaseTask($task);
+        if ($taskEvaluationDTO) {
+            $taskEvaluationDTOs[] = $taskEvaluationDTO;
+        }
 
         foreach ($task->childTasks as $childTask) {
-            $string .= $this->evalTask($childTask);
+            $this->evalTask($taskEvaluationDTOs, $childTask);
         }
-
-        return $string;
     }
 
-    private function evalBaseTask(Task $task): string
+    private function evalBaseTask(Task $task): ?TaskEvaluationDTO
     {
         $reports = $this->getAllReportsFromTask($task);
 
         if (!$reports) {
-            return '';
+            return null;
         }
 
         // Calcuation
@@ -53,28 +80,96 @@ class EvaluationCreator extends AbstractCreator
         $target = $this->calculateTargetFromReports($reports);
 
         // Calculate Target
-        $targetPriceMin = $task->target->value->startDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
-        $targetPriceMax = $task->target->value->endDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
-        $targetPrice = min($targetPriceMax, max($targetPriceMin, $target['total']));
+        $targetPriceMin = 0;
+        $targetPriceMax = 0;
+        $targetPrice = $target['total'];
+        if ($task->target) {
+            $targetPriceMin = $task->target->value->startDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
+            $targetPriceMax = $task->target->value->endDuration->minutes / 60 * self::PRICE_BASE_EXTERNAL;
+            $targetPrice = min($targetPriceMax, max($targetPriceMin, $target['total']));
+        }
+        $contributionMargin = $targetPrice - $actual['total'];
         //$targetMin = $task->target->value
 
-        $contributionMargin = $targetPrice - $actual['total'];
+        $taskEvaluationDTO = new TaskEvaluationDTO(
+            $task,
+            $firstReport,
+            $lastReport,
+            $actual,
+            $target,
+            $targetPrice,
+            $targetPriceMin,
+            $targetPriceMax,
+            $contributionMargin
+        );
+
+        return $taskEvaluationDTO;
 
         // Print
-        $string = "Aufgabe: {$task->name} ({$firstReport->date} - {$lastReport->date})\n";
+        // $string = "Aufgabe: {$task->name} ({$firstReport->date} - {$lastReport->date})\n";
+
+        // foreach ($actual['condensates'] as $condensate) {
+        //     $string .= "IST-Zeit: {$condensate['hours']} Std. á {$condensate['internalPrice']}  = {$condensate['totalInternalPrice']}\n";
+        // }
+        // $string .= "IST-Ausgaben: {$actual['total']}\n";
+
+        // if ($task->target && $task->target->value) {
+        //     $string .= "SOLL-Einnahmen: $targetPrice € ($targetPriceMin € bis $targetPriceMax €) \n";
+        // } else {
+        //     foreach ($target['condensates'] as $condensate) {
+        //         $string .= "SOLL-Zeit (fiktiv): {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
+        //     }
+        //     $string .= "SOLL-Einnahmen (fiktiv): {$target['total']}\n";
+        // }
+
+        // $string .= "Deckungsbeitrag: $contributionMargin\n";
+        // $string .= "\n";
+
+        // return $string;
+    }
+
+    private function renderTaskEvaluationDTO(TaskEvaluationDTO $taskEvaluationDTO): string
+    {
+        $task = $taskEvaluationDTO->getTask();
+        $firstReport = $taskEvaluationDTO->getFirstReport();
+        $lastReport = $taskEvaluationDTO->getLastReport();
+        $actual = $taskEvaluationDTO->getActual();
+        $target = $taskEvaluationDTO->getTarget();
+        $targetPrice = $this->formatCurrency($taskEvaluationDTO->getTargetPrice());
+        $targetPriceMin = $this->formatCurrency($taskEvaluationDTO->getTargetPriceMin());
+        $targetPriceMax = $this->formatCurrency($taskEvaluationDTO->getTargetPriceMax());
+        $contributionMargin = $this->formatCurrency($taskEvaluationDTO->getContributionMargin());
+
+        $taskName = $task->name;
+        $firstReportDate = $firstReport->date;
+        $lastReportDate = $lastReport->date;
+        $actualTotalPrice = $this->formatCurrency($actual['total']);
+        $targetTotalPrice = $this->formatCurrency($target['total']);
+
+        // Print
+        $string = "Aufgabe: $taskName ($firstReportDate - $lastReportDate)\n";
 
         foreach ($actual['condensates'] as $condensate) {
-            $string .= "IST {$condensate['hours']} Std. á {$condensate['internalPrice']}  = {$condensate['totalInternalPrice']}\n";
-        }
-        $string .= "IST (Ausgaben) {$actual['total']}\n";
+            $actualHours = $this->formatHours($condensate['hours']);
+            $internalPrice = $this->formatCurrency($condensate['internalPrice']);
+            $totalInternalPrice = $this->formatCurrency($condensate['totalInternalPrice']);
 
-        if ($task->target->value) {
-            $string .= "SOLL (Einnahmen): $targetPrice € ($targetPriceMin € bis $targetPriceMax €) \n";
+            $string .= "IST-Zeit: $actualHours á $internalPrice = $totalInternalPrice\n";
+        }
+        $string .= "IST-Ausgaben: $actualTotalPrice\n";
+
+        if ($task->target && $task->target->value) {
+            $string .= "SOLL-Einnahmen: $targetPrice ($targetPriceMin bis $targetPriceMax) \n";
         } else {
             foreach ($target['condensates'] as $condensate) {
-                $string .= "(fiktive SOLL-Zeit) {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
+                $targetHoursRounded = $this->formatHours($condensate['hoursRounded']);
+                $externalPrice = $this->formatCurrency($condensate['externalPrice']);
+                $totalExternalPriceRounded = $this->formatCurrency($condensate['totalExternalPriceRounded']);
+
+                $string .=
+                    "SOLL-Zeit (fiktiv): $targetHoursRounded á $externalPrice = $totalExternalPriceRounded\n";
             }
-            $string .= "(fiktive SOLL-Zeit) (Einnahmen) {$target['total']}\n";
+            $string .= "SOLL-Einnahmen (fiktiv): $targetTotalPrice\n";
         }
 
         $string .= "Deckungsbeitrag: $contributionMargin\n";
