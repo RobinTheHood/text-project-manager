@@ -7,7 +7,6 @@ namespace RobinTheHood\TextProjectManager\Project\Creators;
 use RobinTheHood\TextProjectManager\Project\Entities\Project;
 use RobinTheHood\TextProjectManager\Project\Entities\Report;
 use RobinTheHood\TextProjectManager\Project\Entities\Task;
-use RobinTheHood\TextProjectManager\Project\Parsers\ProjectParser;
 
 /**
  * Deckungsbeitragsberechnung:
@@ -105,28 +104,6 @@ class EvaluationCreator extends AbstractCreator
         );
 
         return $taskEvaluationDTO;
-
-        // Print
-        // $string = "Aufgabe: {$task->name} ({$firstReport->date} - {$lastReport->date})\n";
-
-        // foreach ($actual['condensates'] as $condensate) {
-        //     $string .= "IST-Zeit: {$condensate['hours']} Std. á {$condensate['internalPrice']}  = {$condensate['totalInternalPrice']}\n";
-        // }
-        // $string .= "IST-Ausgaben: {$actual['total']}\n";
-
-        // if ($task->target && $task->target->value) {
-        //     $string .= "SOLL-Einnahmen: $targetPrice € ($targetPriceMin € bis $targetPriceMax €) \n";
-        // } else {
-        //     foreach ($target['condensates'] as $condensate) {
-        //         $string .= "SOLL-Zeit (fiktiv): {$condensate['hoursRounded']} Std. á {$condensate['externalPrice']} = {$condensate['totalExternalPriceRounded']}\n";
-        //     }
-        //     $string .= "SOLL-Einnahmen (fiktiv): {$target['total']}\n";
-        // }
-
-        // $string .= "Deckungsbeitrag: $contributionMargin\n";
-        // $string .= "\n";
-
-        // return $string;
     }
 
     private function renderTaskEvaluationDTO(TaskEvaluationDTO $taskEvaluationDTO): string
