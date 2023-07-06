@@ -228,8 +228,11 @@ abstract class AbstractCreator
      *
      * @param Report[] $reports
      */
-    protected function condenseDurationReports(array $reports, float $baseExternalPrice, float $baseInternalPrice): array
-    {
+    protected function condenseDurationReports(
+        array $reports,
+        float $baseExternalPrice,
+        float $baseInternalPrice
+    ): array {
         $minutes = 0;
 
         foreach ($reports as $report) {

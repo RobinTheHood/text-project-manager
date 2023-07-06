@@ -62,7 +62,6 @@ class BillItemsCreator extends AbstractCreator
         return $string;
     }
 
-
     private function processDurationReports(array $reports)
     {
         $durationReports = $this->filterReportsByDuration($reports);
