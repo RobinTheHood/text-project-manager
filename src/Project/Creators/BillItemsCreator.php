@@ -55,8 +55,29 @@ class BillItemsCreator extends AbstractCreator
         if ($task->description && $task->description->type === Description::TYPE_VISABLE) {
             $string .= $task->description->value . "\n";
         }
-        $string .= $this->processDurationReports($reports);
-        $string .= $this->processQuantityReports($reports);
+
+        if ($task->target) {
+            $condensate = $this->condenseDurationReports(
+                $reports,
+                self::PRICE_BASE_EXTERNAL,
+                self::PRICE_BASE_INTERNAL
+            );
+
+            $targetHoursMin = $task->target->value->startDuration->minutes / 60;
+            $targetHoursMax = $task->target->value->endDuration->minutes / 60;
+            $actualHoursRounded = $condensate['hoursRounded'];
+            $targetHours = $this->clamp($actualHoursRounded, $targetHoursMin, $targetHoursMax);
+            $totalPrice = $targetHours  * self::PRICE_BASE_EXTERNAL;
+
+            $formatedHours = $this->formatHours($targetHours);
+            $formatedExternalPrice = $this->formatCurrency(self::PRICE_BASE_EXTERNAL);
+            $formatedTotalExternalPrice = $this->formatCurrency($totalPrice);
+            $string .= "$formatedHours á $formatedExternalPrice = $formatedTotalExternalPrice\n";
+        } else {
+            $string .= $this->processDurationReports($reports);
+            $string .= $this->processQuantityReports($reports);
+        }
+
         $string .= "\n";
 
         return $string;
