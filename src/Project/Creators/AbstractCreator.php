@@ -12,6 +12,17 @@ use RobinTheHood\TextProjectManager\Project\Entities\Task;
 
 abstract class AbstractCreator
 {
+    protected function clamp($value, $min, $max)
+    {
+        if ($value < $min) {
+            return $min;
+        } elseif ($value > $max) {
+            return $max;
+        } else {
+            return $value;
+        }
+    }
+
     /**
      * Lierfert den externel Preis eines Reports ode den standard externen Preis.
      */
