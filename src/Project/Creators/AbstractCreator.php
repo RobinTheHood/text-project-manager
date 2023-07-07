@@ -24,7 +24,7 @@ abstract class AbstractCreator
     }
 
     /**
-     * Lierfert den externel Preis eines Reports ode den standard externen Preis.
+     * Lierfert den externel Preis eines Reports oder den standard externen Preis.
      */
     protected function getExternalPrice(?Report $report, float $basePrice): float
     {
@@ -234,16 +234,17 @@ abstract class AbstractCreator
     /**
      * Addiert die Dauration Werte der Reports zusammen und liefert
      * die Summe aller Minuten (nicht gerundet und gerundet), den
-     * externen und den internen Preis. Alles Reports müssen den
-     * gleichen external Preis haben.
+     * externen und den internen Preis.
      *
      * @param Report[] $reports
+     *
+     * @return DurationReportCondensate
      */
     protected function condenseDurationReports(
         array $reports,
         float $baseExternalPrice,
         float $baseInternalPrice
-    ): array {
+    ): DurationReportCondensate {
         $minutes = 0;
 
         foreach ($reports as $report) {
@@ -253,17 +254,48 @@ abstract class AbstractCreator
         $hours = $minutes / 60;
         $hoursRounded = $this->stepRoundMinutes($minutes, 15) / 60;
 
-        $condensate = [
-            'hours' => $hours,
-            'hoursRounded' => $hoursRounded,
-            'externalPrice' => $this->getExternalPrice($report, $baseExternalPrice),
-            'internalPrice' => $this->getInternalPrice($report, $baseInternalPrice),
-            'totalExternalPrice' => $this->getExternalPrice($report, $baseExternalPrice) * $hours,
-            'totalExternalPriceRounded' => $this->getExternalPrice($report, $baseExternalPrice) * $hoursRounded,
-            'totalInternalPrice' => $this->getInternalPrice($report, $baseInternalPrice) * $hours,
-            'totalInternalPriceRounded' => $this->getInternalPrice($report, $baseInternalPrice) * $hoursRounded
-        ];
+        return new DurationReportCondensate(
+            $reports,
+            $hours,
+            $hoursRounded,
+            $this->getExternalPrice($report, $baseExternalPrice),
+            $this->getInternalPrice($report, $baseInternalPrice),
+            $this->getExternalPrice($report, $baseExternalPrice) * $hours,
+            $this->getExternalPrice($report, $baseExternalPrice) * $hoursRounded,
+            $this->getInternalPrice($report, $baseInternalPrice) * $hours,
+            $this->getInternalPrice($report, $baseInternalPrice) * $hoursRounded
+        );
+    }
 
-        return $condensate;
+    /**
+     * @param Report[] $reports
+     */
+    protected function condenseReports(
+        array $reports,
+        float $baseExternalPrice,
+        float $baseInternalPrice
+    ): array {
+        $totalInternalPrice = 0;
+        $totalExternalPrice = 0;
+
+        foreach ($reports as $report) {
+            if ($report->amount->value instanceof Duration) {
+                $minutes = $report->amount->value->minutes;
+                $hours = $minutes / 60;
+                $hoursRounded = $this->stepRoundMinutes($minutes, 15) / 60;
+
+                $totalInternalPrice += $hours * $this->getInternalPrice($report, $baseInternalPrice);
+                $totalExternalPrice += $hoursRounded * $this->getExternalPrice($report, $baseExternalPrice);
+            } elseif ($report->amount->value instanceof Quantity) {
+                $quantity = $report->amount->value->value;
+                $totalInternalPrice += $quantity * $report->internalPrice->value;
+                $totalExternalPrice += $quantity * $report->externalPrice->value;
+            }
+        }
+
+        return [
+            'totalInternalPrice' => $totalInternalPrice,
+            'totalExternalPrice' => $totalExternalPrice
+        ];
     }
 }
