@@ -4,15 +4,8 @@ declare(strict_types=1);
 
 namespace RobinTheHood\TextProjectManager\Helpers;
 
-use RobinTheHood\TextProjectManager\Adapters\FileGetContentsWrapperInterface;
-
-class InputReader implements InputReaderInterface
+abstract class InputReader
 {
-    /**
-     * @var string
-     */
-    private $filePath;
-
     /**
      * @var string
      */
@@ -38,10 +31,9 @@ class InputReader implements InputReaderInterface
      */
     private $linePosition = 1;
 
-    public function __construct(FileGetContentsWrapperInterface $fileGetsContentWrapper, string $filePath)
+    public function setContent(string $content): void
     {
-        $this->filePath = $filePath;
-        $this->content = $fileGetsContentWrapper->fileGetContents($filePath);
+        $this->content = $content;
         $this->contentLength = strlen($this->content);
     }
 
