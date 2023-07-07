@@ -50,7 +50,7 @@ class ReportCondensateFactory
 
         $reports = [$report];
         $externalPrice = $this->reportPriceSelector->getExternal($report, $defaultExternalPrice);
-        $internalPrice = $this->reportPriceSelector->getExternal($report, $defaultInternalPrice);
+        $internalPrice = $this->reportPriceSelector->getInternal($report, $defaultInternalPrice);
         $description = $report->description;
 
         return new ReportCondensate(

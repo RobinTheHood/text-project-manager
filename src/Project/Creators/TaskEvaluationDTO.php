@@ -15,8 +15,8 @@ class TaskEvaluationDTO
     private Task $task;
     private Report $firstReport;
     private Report $lastReport;
-    private array $actual;
-    private array $target;
+    private ReportCondensate $actual;
+    private ReportCondensate $target;
     private float $targetPrice;
     private float $targetPriceMin;
     private float $targetPriceMax;
@@ -26,8 +26,8 @@ class TaskEvaluationDTO
         Task $task,
         Report $firstReport,
         Report $lastReport,
-        array $actual,
-        array $target,
+        ReportCondensate $actual,
+        ReportCondensate $target,
         float $targetPrice,
         float $targetPriceMin,
         float $targetPriceMax,
@@ -59,12 +59,12 @@ class TaskEvaluationDTO
         return $this->lastReport;
     }
 
-    public function getActual(): array
+    public function getActual(): ReportCondensate
     {
         return $this->actual;
     }
 
-    public function getTarget(): array
+    public function getTarget(): ReportCondensate
     {
         return $this->target;
     }

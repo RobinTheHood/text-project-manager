@@ -20,9 +20,6 @@ class BillItemsCreator extends AbstractCreator
 
     public $total = 0.0;
 
-    /** @var ReportCondenser */
-    private $reportCondenser;
-
     /** @var ReportGrouper */
     private $reportGrouper;
 
@@ -37,14 +34,7 @@ class BillItemsCreator extends AbstractCreator
 
     public function __construct()
     {
-        $this->reportCondenser = new ReportCondenser(
-            new ReportGrouper(new ReportPriceSelector()),
-            new ReportFilter(new ReportPriceSelector()),
-            new ReportPriceSelector()
-        );
-
         $this->reportGrouper = new ReportGrouper(new ReportPriceSelector());
-
         $this->reportFilter = new ReportFilter(new ReportPriceSelector());
         $this->reportCondensateFactory = new ReportCondensateFactory(new ReportPriceSelector());
         $this->reportCondensateAdder = new ReportCondensateAdder();
@@ -92,7 +82,7 @@ class BillItemsCreator extends AbstractCreator
     private function evalBaseTask(Task $task): ?BillItemDTO
     {
         $reports = $this->getAllReportsFromTask($task);
-        $reports = $this->filterReportsByBillable($reports);
+        $reports = $this->reportFilter->filterByBillable($reports);
 
         if (!$reports) {
             return null;
@@ -120,10 +110,6 @@ class BillItemsCreator extends AbstractCreator
             );
             $reportCondensate = $this->reportCondensateAdder->addAll($reportCondensates);
             $actualPrice = $reportCondensate->getExternalTotalPrice();
-
-            // $actualHoursCondensate = $this->reportCondenser->durationToDuration($reports);
-            // $actualHoursRounde = $actualHoursCondensate['totalHoursRounded'];
-            // $actualPrice = $this->reportCondenser->toTotalExternal($reports, self::PRICE_BASE_EXTERNAL);
 
             if ($task->target->value instanceof Duration) {
                 $targetHoursMin = $task->target->value->minutes / 60;
@@ -191,23 +177,6 @@ class BillItemsCreator extends AbstractCreator
             $resultDurationCondensates[] = $durationReportCondensate;
         }
         return $resultDurationCondensates;
-
-        // $condensates = [];
-
-        // $groupedReports = $this->reportGrouper->groupByExternalPrice($reports, self::PRICE_BASE_EXTERNAL);
-        // foreach ($groupedReports as $externalPrice => $reports) {
-        //     $condensate = $this->reportCondenser->durationByExternalPrice(
-        //         $reports,
-        //         $externalPrice,
-        //         self::PRICE_BASE_EXTERNAL
-        //     );
-
-        //     if ($condensate) {
-        //         $condensates[] = $condensate;
-        //     }
-        // }
-
-        // return $condensates;
     }
 
     /**
@@ -229,33 +198,6 @@ class BillItemsCreator extends AbstractCreator
         );
         $quantityReportCondensate = $this->reportCondensateAdder->addAll($quantityReportCondensates);
         return [$quantityReportCondensate];
-
-        // $this->filterReportsByQuantity($reports);
-        // $condensate = $this->condenseQuantityReports($quantityReports);
-
-        // return $condensate;
-    }
-
-    /**
-     * @param Report[] $reports
-     */
-    private function condenseQuantityReports(array $reports): QuantityReportCondensate
-    {
-        $totalExternalPrice = 0;
-        $totalInternalPrice = 0;
-
-        /** @var Report */
-        foreach ($reports as $report) {
-            $qunatity = $report->amount->value->value;
-            $totalExternalPrice += $this->getExternalPrice($report, self::PRICE_BASE_EXTERNAL) * $qunatity;
-            $totalInternalPrice += $this->getInternalPrice($report, self::PRICE_BASE_INTERNAL) * $qunatity;
-        }
-
-        return new QuantityReportCondensate(
-            $reports,
-            $totalExternalPrice,
-            $totalInternalPrice
-        );
     }
 
     private function getTotalFromBillItemDTO(BillItemDTO $billItemDTO): float
@@ -321,6 +263,7 @@ class BillItemsCreator extends AbstractCreator
     private function renderDurationReports(array $reportCondensates): string
     {
         $string = '';
+
         /** @var ReportCondensate */
         foreach ($reportCondensates as $reportCondensate) {
             $formatedHours = $this->formatHours($reportCondensate->getExternalQuantity());
@@ -338,14 +281,12 @@ class BillItemsCreator extends AbstractCreator
     private function renderQuantityReports(array $reportCondensates): string
     {
         $string = '';
+
         /** @var ReportCondensate */
         foreach ($reportCondensates as $reportCondensate) {
             $string = "{$this->formatCurrency($reportCondensate->getExternalTotalPrice())}\n";
         }
 
-        // if ($condensate->getTotalExternalPrice()) {
-        //     $string = "{$this->formatCurrency($condensate->getTotalExternalPrice())}\n";
-        // }
         return $string;
     }
 }
