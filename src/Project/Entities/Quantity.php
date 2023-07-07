@@ -7,7 +7,7 @@ namespace RobinTheHood\TextProjectManager\Project\Entities;
 class Quantity
 {
     /**
-     * @var string
+     * @var int
      */
     public $value;
 }

@@ -7,7 +7,7 @@ namespace RobinTheHood\TextProjectManager\Project\Entities;
 class Amount
 {
     /**
-     * @var Duration|Quantity;
+     * @var Duration|Quantity
      */
     public $value;
 }
