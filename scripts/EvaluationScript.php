@@ -1,15 +1,28 @@
 <?php
 
-namespace RobinTheHood\TextProjectManager\Tests;
+namespace RobinTheHood\TextProjectManager\Scripts;
 
+use Exception;
+use RobinTheHood\TextProjectManager\Adapters\FileGetContentsWrapper;
+use RobinTheHood\TextProjectManager\Helpers\FileInputReader;
+use RobinTheHood\TextProjectManager\Project\Creators\EvaluationCreator;
+use RobinTheHood\TextProjectManager\Project\Lexer\Lexer;
 use RobinTheHood\TextProjectManager\Project\Parsers\ProjectParser;
-use RobinTheHood\TextProjectManager\Project\Creators\EvaloationCreator;
+use RobinTheHood\TextProjectManager\Project\Parsers\Parser;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$projectParser = new ProjectParser();
-$tasks = $projectParser->parseTasks();
+$fileGetsContentWrapper = new FileGetContentsWrapper();
+$inputReader = new FileInputReader($fileGetsContentWrapper, __DIR__ . '/../data/ProjectPlan02.md');
+$lexer = new Lexer($inputReader);
+$parser = new Parser($lexer);
 
-$projectEvaluator = new EvaloationCreator();
-$evaluationString = $projectEvaluator->createEvaluation($tasks);
-echo $evaluationString;
+try {
+    $projectParser = new ProjectParser();
+    $project = $projectParser->parse($parser);
+    $evaluationCreator = new EvaluationCreator();
+    $string = $evaluationCreator->create($project);
+    echo $string;
+} catch (Exception $e) {
+    echo $e;
+}
