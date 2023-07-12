@@ -22,7 +22,7 @@ class BillItemDTO
     private $targetHours;
 
     /** @var float*/
-    private $totalPrice;
+    private $targetTotalPrice;
 
     /** @var ReportCondensate[] */
     private $durationReportCondensates;
@@ -38,7 +38,7 @@ class BillItemDTO
         Report $firstReport,
         Report $lastReport,
         float $targetHours,
-        float $totalPrice,
+        float $targetTotalPrice,
         array $durationReportCondensates,
         array $quantityReportCondensates
     ) {
@@ -46,7 +46,7 @@ class BillItemDTO
         $this->firstReport = $firstReport;
         $this->lastReport = $lastReport;
         $this->targetHours = $targetHours;
-        $this->totalPrice = $totalPrice;
+        $this->targetTotalPrice = $targetTotalPrice;
         $this->durationReportCondensates = $durationReportCondensates;
         $this->quantityReportCondensates = $quantityReportCondensates;
     }
@@ -71,9 +71,9 @@ class BillItemDTO
         return $this->targetHours;
     }
 
-    public function getTotalPrice(): float
+    public function getTargetTotalPrice(): float
     {
-        return $this->totalPrice;
+        return $this->targetTotalPrice;
     }
 
     /**
@@ -90,5 +90,26 @@ class BillItemDTO
     public function getQuantityReportCondensates(): array
     {
         return $this->quantityReportCondensates;
+    }
+
+    public function getTotalPrice(): float
+    {
+        $task = $this->getTask();
+
+        if ($task->target) {
+            return $this->getTargetTotalPrice();
+        } else {
+            $total = 0;
+
+            foreach ($this->getDurationReportCondensates() as $reportCondensate) {
+                $total += $reportCondensate->getExternalTotalPrice();
+            }
+
+            foreach ($this->getQuantityReportCondensates() as $reportCondensate) {
+                $total += $reportCondensate->getExternalTotalPrice();
+            }
+
+            return $total;
+        }
     }
 }

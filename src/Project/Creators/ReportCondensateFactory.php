@@ -64,6 +64,19 @@ class ReportCondensateFactory
         );
     }
 
+    public function createEmpty(): ReportCondensate
+    {
+        return new ReportCondensate(
+            ReportCondensate::TYPE_DURATION,
+            [],
+            0,
+            0,
+            0.0,
+            0.0,
+            ''
+        );
+    }
+
     protected function stepRoundMinutes(float $minutes, float $step): float
     {
         $roundedMinutes = ceil($minutes / $step) * $step;
