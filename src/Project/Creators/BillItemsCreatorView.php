@@ -23,12 +23,12 @@ class BillItemsCreatorView extends AbstractView
     /**
      * @param BillItemDTO[] $billItemDTOs
      */
-    public function render(array $billItemDTOs): string
+    public function render(float $total, array $billItemDTOs): string
     {
 
         $total = 0;
         $string = '';
-        //$string .= "####### RECHNUNGSPOSITIONEN #######\n";
+        $string .= "####### RECHNUNGSPOSITIONEN #######\n";
         foreach ($billItemDTOs as $billItemDTO) {
             $string .= $this->renderBillItemDTO($billItemDTO);
             $billItemDTOTotal = $billItemDTO->getTotalPrice();

@@ -21,7 +21,7 @@ class EvaluationCreatorView extends AbstractView
     /**
      * @param TaskEvaluationDTO[] $taskEvaluationDTOs
      */
-    public function render(array $taskEvaluationDTOs)
+    public function render(float $total, array $taskEvaluationDTOs)
     {
         $externalPriceFormated = $this->formatCurrency($this->externalPrice);
         $internalPriceFormated = $this->formatCurrency($this->internalPrice);
@@ -35,16 +35,13 @@ class EvaluationCreatorView extends AbstractView
         $string .= "$externalPriceFormated externer Stundensatz (Kunden-Kosten pro Stunde)\n";
         $string .= "\n";
 
-        $totalContributionMargin = 0;
-
         /** @var TaskEvaluationDTO $taskEvaluationDTO*/
         foreach ($taskEvaluationDTOs as $taskEvaluationDTO) {
             $string .= $this->renderTaskEvaluationDTO($taskEvaluationDTO);
-            $totalContributionMargin += $taskEvaluationDTO->getContributionMargin();
         }
 
         $string .= "### Gesamter Auftrag ### \n";
-        $string .= "{$this->formatCurrency($totalContributionMargin)} Deckungsbeitrag\n";
+        $string .= "{$this->formatCurrency($total)} Deckungsbeitrag\n";
 
         return $string;
     }

@@ -20,6 +20,9 @@ class EvaluationCreator extends AbstractCreator
     private const DEFAULT_PRICE_EXTERNAL = 80.00;
     private const DEFAULT_PRICE_INTERNAL = 30.00;
 
+    /** @var float */
+    public $total = 0.0;
+
     /** @var ReportFilter */
     private $reportFilter;
 
@@ -29,7 +32,7 @@ class EvaluationCreator extends AbstractCreator
     /** @var ReportCondensateAdder */
     private $reportCondensateAdder;
 
-    /** @var BillItemsCreatorView */
+    /** @var EvaluationCreatorView */
     private $evaluationCreatorView;
 
     public function __construct()
@@ -50,7 +53,12 @@ class EvaluationCreator extends AbstractCreator
             $this->evalTask($taskEvaluationDTOs, $task);
         }
 
-        return $this->evaluationCreatorView->render($taskEvaluationDTOs);
+        /** @var TaskEvaluationDTO $taskEvaluationDTO*/
+        foreach ($taskEvaluationDTOs as $taskEvaluationDTO) {
+            $this->total += $taskEvaluationDTO->getContributionMargin();
+        }
+
+        return $this->evaluationCreatorView->render($this->total, $taskEvaluationDTOs);
     }
 
     /**

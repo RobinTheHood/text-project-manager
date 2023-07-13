@@ -17,6 +17,7 @@ class BillItemsCreator extends AbstractCreator
     private const DEFAULT_PRICE_EXTERNAL = 80.00;
     private const DEFAULT_PRICE_INTERNAL = 30.00;
 
+    /** @var float */
     public $total = 0.0;
 
     /** @var ReportGrouper */
@@ -53,7 +54,11 @@ class BillItemsCreator extends AbstractCreator
             $this->evalTask($billItemDTOs, $task);
         }
 
-        return $this->billItemsCreatorView->render($billItemDTOs);
+        foreach ($billItemDTOs as $billItemDTO) {
+            $this->total += $billItemDTO->getTotalPrice();
+        }
+
+        return $this->billItemsCreatorView->render($this->total, $billItemDTOs);
     }
 
     /**
