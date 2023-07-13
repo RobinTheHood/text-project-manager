@@ -8,18 +8,26 @@ class ContextTaskReportAmount implements ContextInterface
 {
     public function lex(Lexer $lexer)
     {
-        // if ($lexer->accept(".")) {
-        //     $lexer->emit(Token::TYPE_SEPARATOR);
-        //     return;
-        // }
-
-        // if ($lexer->accept(",")) {
-        //     $lexer->emit(Token::TYPE_SEPARATOR);
-        //     return;
-        // }
-
         if ($lexer->seek('0123456789')) {
             $lexer->pushContext(new ContextNumber());
+            return;
+        }
+
+        if ($lexer->accept(' ')) {
+            $lexer->acceptRun(' ');
+            $lexer->emit(Token::TYPE_SPACE);
+            return;
+        }
+
+        if ($lexer->accept('/')) {
+            $lexer->emit(Token::TYPE_SEPARATOR);
+            return;
+        }
+
+        $letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        if ($lexer->accept($letters)) {
+            $lexer->acceptRun($letters);
+            $lexer->emit(Token::TYPE_UNIT);
             return;
         }
 

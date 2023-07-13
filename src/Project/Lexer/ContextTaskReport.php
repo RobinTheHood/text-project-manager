@@ -43,8 +43,13 @@ class ContextTaskReport implements ContextInterface
             return;
         }
 
+        // if ($this->fieldIndex === 1) {
+        //     $lexer->pushContext(new ContextNumber());
+        //     return;
+        // }
+
         if ($this->fieldIndex === 1) {
-            $lexer->pushContext(new ContextNumber());
+            $lexer->pushContext(new ContextTaskReportAmount());
             return;
         }
 
