@@ -10,4 +10,9 @@ class Quantity
      * @var int
      */
     public $value;
+
+    /**
+     * @var string
+     */
+    public $rate;
 }
