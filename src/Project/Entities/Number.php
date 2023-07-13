@@ -16,6 +16,9 @@ class Number
      */
     public $unit = '';
 
+    /** @var string */
+    public $rate;
+
 
     public function convertToDuration(): ?Duration
     {
@@ -54,9 +57,10 @@ class Number
             return null;
         }
 
-        $money = new Quantity();
-        $money->value = $value;
-        return $money;
+        $quantity = new Quantity();
+        $quantity->value = $value;
+        $quantity->rate = $this->rate;
+        return $quantity;
     }
 
     public function contertNumberToAmount(): ?Amount
