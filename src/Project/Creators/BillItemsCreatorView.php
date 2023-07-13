@@ -66,7 +66,7 @@ class BillItemsCreatorView extends AbstractView
             if ($billItemDTO->getTargetHours()) {
                 $formatedHours = $this->formatHours($billItemDTO->getTargetHours());
                 $formatedExternalPrice = $this->formatCurrency($this->externalPrice);
-                $string .= "$formatedHours á $formatedExternalPrice = $formatedTotalExternalPrice\n";
+                $string .= "$formatedHours à $formatedExternalPrice = $formatedTotalExternalPrice\n";
             } else {
                 $string .= "$formatedTotalExternalPrice\n";
             }
