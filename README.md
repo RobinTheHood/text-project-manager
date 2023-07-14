@@ -1,6 +1,7 @@
 # Dokumentation
 
 Ein Projekt besteht aus folgenden Komponenten:
+
 - Aufgaben (Tasks)
 - Bearbeiter (User)
 - Berichte (Reports)
@@ -14,6 +15,56 @@ Ein Projekt besteht aus einer oder mehreren Aufgaben (Task). Eine Aufgabe fängt
 # Aufgabe 1
 
 # Aufgabe 2
+```
+
+### Aufgabe (Task) mit Festpreis
+
+Wurde mit dem Auftraggeber ein Festpreis für eine Aufgabe vereinpart, kann dieser hinter einer Aufgabe vermerkt werden. Der Festpreis muss mit einem `;` Zeichen getrennt werden. Hier ein Beispiel:
+
+```markdown
+# Aufgabe mit Festpreis; 1000,00€
+```
+
+### Aufgabe (Task) mit Festpreis-Rahmen
+
+Wurde mit dem Auftraggeber ein Festpreis-Rahmen für eine Aufgabe vereinpart, kann dieser hinter einer Aufgabe vermerkt werden. Der Festpreis-Rahmen muss mit einem `;` Zeichen getrennt werden. Hier ein Beispiel:
+
+```markdown
+# Aufgabe mit Festpreis-Rahmen; 1000,00€ - 1300,00€
+```
+
+### Aufgabe (Task) mit Festzeit
+
+Wurde mit dem Auftraggeber eine feste Zeit für eine Aufgabe vereinpart, kann diese hinter einer Aufgabe vermerkt werden. Die Festzeit muss mit einem `;` Zeichen getrennt werden. Hier ein Beispiel:
+
+```markdown
+# Aufgabe mit Festzeit; 5h
+```
+
+### Aufgabe (Task) mit Festzeit-Rahmen
+
+Wurde mit dem Auftraggeber eine feste Zeitspanne für eine Aufgabe vereinpart, kann diese hinter einer Aufgabe vermerkt werden. Der Festzeit-Rahmen muss mit einem `;` Zeichen getrennt werden. Hier ein Beispiel:
+
+```markdown
+# Aufgabe mit Festzeit-Rahmen; 5h - 8h
+```
+
+### Aufgabe (Task) mit versteckter Beschreibung
+
+Zu einer Aufgabe kann eine Beschreibung verfasst werden. Diese erscheint standardmäßig nicht auf der Rechnung. Die versteckte Beschreibung kann als Text direkt unter die Aufgabe geschrieben werden. Hier ein Beispiel:
+
+```markdown
+# Aufgabe mit vesteckter Beschreibung
+Alle Bilder austauschen
+```
+
+### Aufgabe (Task) mit sichtbarer Beschreibung
+
+Zu einer Aufgabe kann eine Beschreibung verfasst werden, die auf der Rechnung mit ausgegeben wird. Die sichtbare Beschreibung kann als Text direkt unter die Aufgabe geschrieben werden und muss mit einem `!` Zeichen beginnen. Hier ein Beispiel:
+
+```markdown
+# Aufgabe mit sichtbarer Beschreibung
+! Alle Bilder austauschen
 ```
 
 ## Bearbeiter (User)
@@ -53,18 +104,22 @@ Ein Bricht (Report) ist wie folgt aufgebaut:
 (+ | -) ; DATUM ; (DAUER | MENGE) ; BESCHREIBUNG ; [EXTERNE-KOSTEN] ; [INTERNE-KOSTEN]
 ````
 
-Jeder Teil eines Berichts (Report) wird durch ein `;` Zeichen getrennt. `(A | B)` wird als `A` oder `B` gelesen und `[C]` wird als optional `C` gelsen. Ein Bericht (Report) ist aus folgenden Teilen aufgebaut. Ein Bericht startet mit `+` oder `-`, gefolgt von einem Datum, gefolgt von einer Dauer oder einer Menge, gefolgt von einer Beschreibung. Optional gefolgt von externen Kosten, die optional von internen Kosten gefolgt werden können.
+Jeder Teil eines Berichts (Report) wird durch ein `;` Zeichen getrennt. `(A | B)` wird als `A` oder `B` gelesen. Befindet sich ein Teil in eckigen Klammern `[...]` wie z. B. `[EXTERNE-KOSTEN]` wird dieser Teil als optional `EXTERNE-KOSTEN` gelsen.
 
-Für die einzelenen Teile können wie folgt verwendet werden:
+Ein Bericht (Report) ist aus folgenden Teilen aufgebaut. Ein Bericht startet mit `+` oder `-`, gefolgt von einem `DATUM`, gefolgt von einer `DAUER` oder einer `MENGE`, gefolgt von einer `BESCHREIBUNG`. Optional gefolgt von `EXTERNE-KOSTEN`, optional gefolgt von `INTERNE-KOSTEN`.
 
-- `+` Ein Report, der in Rechnung gestellt werden kann
-- `-` Ein Report, der nicht in Rechnung gestellt werden kann
-- `DATUM` Datum in Tag.Monat.Jahr oder Wochentag, oder heute oder gestern z. B. `1.1.2023` oder `montag` oder `heute`
-- `DAUER` Möglich sind Minuten `min` und Stunden `h` z. B. `10min` oder `2h`
-- `MENGE` z. B. `2x` oder `1x / Monat` 
-- `BESCHREIBUNG` Eine Beschreibung
-- `EXTERNE-KOSTEN` Externe Kosten pro Einheit in Euro z. B. `80,00€`
-- `INTERNE-KOSTEN` Interne Kosten pro Einheit in Euro z. B. `30,00€`
+Die einzelnen Teile haben folgende Bedeutung:
+
+| Teil             | Beschreibung                                    | Beispiel              |
+|------------------|-------------------------------------------------|-----------------------|
+| `+`              | Report kann in Rechnung gestellt werden         |                       |
+| `-`              | Report kann NICHT in Rechnung gestellt werden   |                       |
+| `DATUM`          | Datum der Leistungserbringung                   | `1.1.2023`            |
+| `DAUER`          | Dauer der Leistungserbrungung                   | `10min`, `1,5h`       |
+| `MENGE`          | Menge / Stückzahl                               | `2x`, `1x / Monat`    |
+| `BESCHREIBUNG`   | Beschreibung der Leistung                       | `Bilder ausgetauscht` |
+| `EXTERNE-KOSTEN` | Kosten pro Dauer oder Menge auf Rechnung        | `80,00€`              |
+| `INTERNE-KOSTEN` | Interner Verrechnungssatz pro Dauer oder Menge  | `30,00€`              |
 
 
 ## Vorlagen (Templates)
