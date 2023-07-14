@@ -98,7 +98,7 @@ Zu jedem Bearbeiter (User) je Aufgabe (Task) können Zeiten oder eine Menge in F
 - 3.1.2023; 1h; Report 3 - Programmierung - Fehler behoben
 ```
 
-Ein Bricht (Report) ist wie folgt aufgebaut:
+Ein Bericht (Report) ist wie folgt aufgebaut:
 
 ```
 (+ | -) ; DATUM ; (DAUER | MENGE) ; BESCHREIBUNG ; [EXTERNE-KOSTEN] ; [INTERNE-KOSTEN]
