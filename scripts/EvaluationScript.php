@@ -13,7 +13,8 @@ use RobinTheHood\TextProjectManager\Project\Parsers\Parser;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 $fileGetsContentWrapper = new FileGetContentsWrapper();
-$inputReader = new FileInputReader($fileGetsContentWrapper, __DIR__ . '/../data/ProjectPlan02.md');
+$inputReader = new FileInputReader($fileGetsContentWrapper, __DIR__ . '/../examples/ExampleContractHosting.md');
+
 $lexer = new Lexer($inputReader);
 $parser = new Parser($lexer);
 

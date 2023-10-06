@@ -15,6 +15,7 @@ abstract class AbstractView
 
     protected function formatHours(float $value): string
     {
+        $value = round($value, 2);
         return str_replace('.', ',', '' . $value) . ' Std.';
     }
 
